@@ -1,0 +1,57 @@
+{
+  "versao": "v1",
+  "vigencia_inicio": "2025-01",
+  "publicado_em": "2026-10-17",
+  "status": "rascunho",
+  "aviso": "Valores de partida para desenvolvimento. Cada fator precisa ser conferido na fonte oficial antes do Demo Day -- ver docs/dados/ficha-metodologica.md.",
+  "fatores": [
+    {
+      "fonte_id": "energia_eletrica_sin",
+      "nome": "Energia eletrica da rede (SIN)",
+      "escopo": "2",
+      "unidade_medida": "kWh",
+      "kg_co2e_por_unidade": 0.0385,
+      "fonte_referencia": "MCTI - Fatores medios de emissao do SIN (media anual)"
+    },
+    {
+      "fonte_id": "gas_natural",
+      "nome": "Gas natural (combustao estacionaria)",
+      "escopo": "1",
+      "unidade_medida": "m3",
+      "kg_co2e_por_unidade": 1.93,
+      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 2"
+    },
+    {
+      "fonte_id": "glp",
+      "nome": "GLP (cozinha e aquecimento)",
+      "escopo": "1",
+      "unidade_medida": "kg",
+      "kg_co2e_por_unidade": 2.93,
+      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 2"
+    },
+    {
+      "fonte_id": "diesel_frota",
+      "nome": "Diesel - frota propria",
+      "escopo": "1",
+      "unidade_medida": "L",
+      "kg_co2e_por_unidade": 2.6,
+      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 3"
+    },
+    {
+      "fonte_id": "gasolina_frota",
+      "nome": "Gasolina - frota propria",
+      "escopo": "1",
+      "unidade_medida": "L",
+      "kg_co2e_por_unidade": 2.21,
+      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 3"
+    },
+    {
+      "fonte_id": "residuo_aterro",
+      "nome": "Residuo solido enviado a aterro",
+      "escopo": "3",
+      "unidade_medida": "kg",
+      "kg_co2e_por_unidade": 0.58,
+      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 5"
+    }
+  ]
+}

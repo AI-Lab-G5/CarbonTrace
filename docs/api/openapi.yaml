@@ -1,0 +1,752 @@
+# Gerado a partir do codigo: python -c "from app.main import app; print(app.openapi())"
+# Nao editar a mao -- o contrato segue a implementacao.
+
+openapi: 3.1.0
+info:
+  title: CarbonTrace API
+  description: Inventario de emissoes de GEE para redes de varejo e franquias. Todo dado de cliente vive
+    sob /tenants/{tenantId}/ e o tenant vem da identidade do chamador, nunca de parametro do cliente.
+  version: 0.1.0
+paths:
+  /health:
+    get:
+      tags:
+      - infra
+      summary: Health
+      description: 'Prova de vida da API.
+
+
+        Usado pelo healthcheck do Docker Compose e pelo teste de fumaca do CI.
+
+        Nao toca no Firestore de proposito: se o banco cair, o container ainda
+
+        responde e o log mostra onde esta o problema.'
+      operationId: health_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Health Health Get
+  /v1/unidades:
+    get:
+      tags:
+      - unidades
+      summary: Listar
+      operationId: listar_v1_unidades_get
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      - name: x-debug-uid
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Uid
+      - name: x-debug-tenant
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Tenant
+      - name: x-debug-papel
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Papel
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Unidade'
+                title: Response Listar V1 Unidades Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - unidades
+      summary: Criar
+      operationId: criar_v1_unidades_post
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      - name: x-debug-uid
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Uid
+      - name: x-debug-tenant
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Tenant
+      - name: x-debug-papel
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Papel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Unidade'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unidade'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/unidades/{unidade_id}:
+    get:
+      tags:
+      - unidades
+      summary: Obter
+      operationId: obter_v1_unidades__unidade_id__get
+      parameters:
+      - name: unidade_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Unidade Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      - name: x-debug-uid
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Uid
+      - name: x-debug-tenant
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Tenant
+      - name: x-debug-papel
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Papel
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Unidade'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/registros:
+    get:
+      tags:
+      - registros
+      summary: Listar
+      operationId: listar_v1_registros_get
+      parameters:
+      - name: competencia
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Competencia
+      - name: unidade_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Unidade Id
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      - name: x-debug-uid
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Uid
+      - name: x-debug-tenant
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Tenant
+      - name: x-debug-papel
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Papel
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Registro'
+                title: Response Listar V1 Registros Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    put:
+      tags:
+      - registros
+      summary: Registrar
+      description: 'Grava ou atualiza um lancamento.
+
+
+        PUT, e nao POST, justamente porque a operacao e idempotente: o mesmo
+
+        pedido repetido leva ao mesmo estado, sem efeito colateral extra.'
+      operationId: registrar_v1_registros_put
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      - name: x-debug-uid
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Uid
+      - name: x-debug-tenant
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Tenant
+      - name: x-debug-papel
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Papel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistroEntrada'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Registro'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/fatores/versoes:
+    get:
+      tags:
+      - fatores
+      summary: Versoes
+      operationId: versoes_v1_fatores_versoes_get
+      parameters:
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      - name: x-debug-uid
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Uid
+      - name: x-debug-tenant
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Tenant
+      - name: x-debug-papel
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Papel
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                title: Response Versoes V1 Fatores Versoes Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/fatores/{versao}:
+    get:
+      tags:
+      - fatores
+      summary: Obter
+      operationId: obter_v1_fatores__versao__get
+      parameters:
+      - name: versao
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Versao
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      - name: x-debug-uid
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Uid
+      - name: x-debug-tenant
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Tenant
+      - name: x-debug-papel
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Papel
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersaoFatores'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/consolidado:
+    get:
+      tags:
+      - consolidado
+      summary: Obter
+      operationId: obter_v1_consolidado_get
+      parameters:
+      - name: competencia
+        in: query
+        required: true
+        schema:
+          type: string
+          description: Mes de referencia, no formato AAAA-MM
+          title: Competencia
+        description: Mes de referencia, no formato AAAA-MM
+      - name: authorization
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Authorization
+      - name: x-debug-uid
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Uid
+      - name: x-debug-tenant
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Tenant
+      - name: x-debug-papel
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Debug-Papel
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consolidado'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+components:
+  schemas:
+    Consolidado:
+      properties:
+        competencia:
+          type: string
+          title: Competencia
+        total_kg_co2e:
+          type: number
+          title: Total Kg Co2E
+        mediana_kg_co2e:
+          type: number
+          title: Mediana Kg Co2E
+        por_unidade:
+          items:
+            $ref: '#/components/schemas/LinhaConsolidado'
+          type: array
+          title: Por Unidade
+      type: object
+      required:
+      - competencia
+      - total_kg_co2e
+      - mediana_kg_co2e
+      - por_unidade
+      title: Consolidado
+      description: Agregado da rede em uma competencia.
+    Fator:
+      properties:
+        fonte_id:
+          type: string
+          title: Fonte Id
+        nome:
+          type: string
+          title: Nome
+        escopo:
+          type: string
+          enum:
+          - '1'
+          - '2'
+          - '3'
+          title: Escopo
+        unidade_medida:
+          type: string
+          title: Unidade Medida
+        kg_co2e_por_unidade:
+          type: number
+          title: Kg Co2E Por Unidade
+        fonte_referencia:
+          type: string
+          title: Fonte Referencia
+      type: object
+      required:
+      - fonte_id
+      - nome
+      - escopo
+      - unidade_medida
+      - kg_co2e_por_unidade
+      - fonte_referencia
+      title: Fator
+      description: Fator de conversao de uma fonte de emissao.
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    LinhaConsolidado:
+      properties:
+        unidade_id:
+          type: string
+          title: Unidade Id
+        unidade_nome:
+          type: string
+          title: Unidade Nome
+        emissao_kg_co2e:
+          type: number
+          title: Emissao Kg Co2E
+      type: object
+      required:
+      - unidade_id
+      - unidade_nome
+      - emissao_kg_co2e
+      title: LinhaConsolidado
+    Registro:
+      properties:
+        id:
+          type: string
+          title: Id
+        unidade_id:
+          type: string
+          title: Unidade Id
+        competencia:
+          type: string
+          title: Competencia
+        fonte_id:
+          type: string
+          title: Fonte Id
+        quantidade:
+          type: number
+          title: Quantidade
+        unidade_medida:
+          type: string
+          title: Unidade Medida
+        fator_versao:
+          type: string
+          title: Fator Versao
+        fator_valor:
+          type: number
+          title: Fator Valor
+        emissao_kg_co2e:
+          type: number
+          title: Emissao Kg Co2E
+        escopo:
+          type: string
+          enum:
+          - '1'
+          - '2'
+          - '3'
+          title: Escopo
+      type: object
+      required:
+      - id
+      - unidade_id
+      - competencia
+      - fonte_id
+      - quantidade
+      - unidade_medida
+      - fator_versao
+      - fator_valor
+      - emissao_kg_co2e
+      - escopo
+      title: Registro
+      description: Lancamento ja calculado e persistido.
+    RegistroEntrada:
+      properties:
+        unidade_id:
+          type: string
+          minLength: 1
+          title: Unidade Id
+        competencia:
+          type: string
+          title: Competencia
+          description: Mes de referencia, no formato AAAA-MM
+        fonte_id:
+          type: string
+          minLength: 1
+          title: Fonte Id
+          description: 'Ex.: energia_eletrica_sin'
+        quantidade:
+          type: number
+          exclusiveMinimum: 0.0
+          title: Quantidade
+      type: object
+      required:
+      - unidade_id
+      - competencia
+      - fonte_id
+      - quantidade
+      title: RegistroEntrada
+      description: Lancamento mensal de uma fonte de emissao em uma unidade.
+    Unidade:
+      properties:
+        id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Id
+        nome:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Nome
+        cidade:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Cidade
+        uf:
+          type: string
+          maxLength: 2
+          minLength: 2
+          title: Uf
+      type: object
+      required:
+      - nome
+      - cidade
+      - uf
+      title: Unidade
+      description: Uma loja, filial ou franquia da rede.
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    VersaoFatores:
+      properties:
+        versao:
+          type: string
+          title: Versao
+        vigencia_inicio:
+          type: string
+          title: Vigencia Inicio
+        publicado_em:
+          type: string
+          title: Publicado Em
+        fatores:
+          items:
+            $ref: '#/components/schemas/Fator'
+          type: array
+          title: Fatores
+      type: object
+      required:
+      - versao
+      - vigencia_inicio
+      - publicado_em
+      - fatores
+      title: VersaoFatores
+      description: Conjunto imutavel de fatores, identificado por versao.
