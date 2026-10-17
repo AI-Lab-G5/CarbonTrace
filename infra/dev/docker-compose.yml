@@ -1,0 +1,71 @@
+# Stack de desenvolvimento do CarbonTrace.
+#
+# Dono: DevOps. O servico "backend" e mantido pelo Backend.
+#
+# Tudo roda local: nenhum destes servicos alcanca a nuvem, e o gasto no GCP
+# ate a Semana 4 permanece zero.
+#
+#   docker compose -f infra/dev/docker-compose.yml up
+
+services:
+  firebase-emulator:
+    build:
+      context: ../emulator
+    ports:
+      - "4000:4000"   # interface do Emulator Suite
+      - "8080:8080"   # Firestore
+      - "9099:9099"   # Auth
+    volumes:
+      - ../../firebase.json:/srv/firebase.json:ro
+      - ../../firestore.rules:/srv/firestore.rules:ro
+      - firebase_data:/srv/data
+    healthcheck:
+      # O backend so sobe depois que o emulador aceita conexao de verdade.
+      # "container iniciado" nao e o mesmo que "pronto para responder".
+      test: ["CMD", "nc", "-z", "localhost", "8080"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile
+    env_file: ../../backend/.env
+    environment:
+      FIRESTORE_EMULATOR_HOST: firebase-emulator:8080
+      FIREBASE_AUTH_EMULATOR_HOST: firebase-emulator:9099
+      FIREBASE_PROJECT_ID: demo-carbontrace
+      AUTH_MODE: emulator
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind mount para o --reload do uvicorn enxergar as alteracoes
+      # sem precisar refazer a imagem a cada linha editada.
+      - ../../backend:/app
+      # docs/ vive na raiz do repositorio, fora do contexto de build do
+      # backend. Montar somente leitura deixa o seed ler o dataset de
+      # fatores sem duplicar o arquivo em dois lugares.
+      - ../../docs:/docs:ro
+    depends_on:
+      firebase-emulator:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../../frontend:/app
+      # Volume anonimo protege o node_modules instalado na imagem de ser
+      # encoberto pelo bind mount acima.
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  firebase_data:

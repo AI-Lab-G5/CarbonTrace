@@ -1,0 +1,36 @@
+[project]
+name = "carbontrace-api"
+version = "0.1.0"
+description = "API de inventario de emissoes de GEE para redes de varejo"
+requires-python = ">=3.12"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = [".venv", "__pycache__"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # erros de estilo (pycodestyle)
+    "F",    # erros reais (pyflakes)
+    "W",    # avisos
+    "I",    # ordenacao de imports
+    "B",    # armadilhas comuns (bugbear)
+    "UP",   # sintaxe moderna de Python
+]
+
+[tool.ruff.lint.flake8-bugbear]
+# Depends()/Query()/Header() no argumento padrao e o padrao idiomatico do
+# FastAPI -- e como ele descobre as dependencias da rota. Sem esta linha o
+# B008 acusa todas as rotas, e o lint vira ruido que o time aprende a ignorar.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Header",
+    "fastapi.Path",
+    "fastapi.Body",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
