@@ -1,0 +1,6 @@
+# Stack de desenvolvimento do CarbonTrace.
+# Permite a execução direta na raiz do repositório:
+#   docker compose up --build
+
+include:
+  - infra/dev/docker-compose.yml
