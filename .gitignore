@@ -27,3 +27,5 @@ ui-debug.log
 # Sistema
 .DS_Store
 Thumbs.db
+
+dist/
