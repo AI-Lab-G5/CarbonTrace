@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        app: [api, frontend]
+        app: [docs/api, frontend]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
