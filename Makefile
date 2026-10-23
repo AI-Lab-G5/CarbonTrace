@@ -15,3 +15,9 @@ ps:
 
 psa:
 	docker compose ps -a
+
+
+.PHONY: docks-lint
+docs-lint:
+	python3 scripts/patch_openapi.py
+	npx --yes @redocly/cli lint docs/api/openapi.yaml

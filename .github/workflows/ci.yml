@@ -7,6 +7,32 @@ on:
   pull_request:
 
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Instalar dependências de documentação
+        run: pip install -r pyyaml
+
+      - name: Normalizar contrato OpenAPI
+        run: python scripts/patch_openapi.py
+
+      - name: Lint OpenAPI
+        run: npx --yes @redocly/cli lint docs/api/openapi.yaml
+
+
   lint-frontend:
     runs-on: ubuntu-latest
     steps:
@@ -14,7 +40,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -34,7 +60,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -46,14 +72,3 @@ jobs:
         run: npm run build
         working-directory: frontend
 
-  lint-openapi:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Valida a especificação OpenAPI
-        run: npx --yes @redocly/cli lint docs/api/openapi.yaml

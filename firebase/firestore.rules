@@ -1,10 +1,44 @@
 rules_version = '2';
+
+// Regras de seguranca do Firestore -- CarbonTrace.
+//
+// Nota de escopo (Checkpoint 1): no MVP o acesso ao Firestore passa pela
+// API, que ja valida identidade e tenant. Estas regras sao a segunda
+// barreira, para o caso de alguem chamar o Firestore direto do navegador.
+//
+// A versao deny-all com testes completos de autorizacao e entrega da
+// Semana 4, conforme o cronograma.
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if request.auth != null
-        && request.auth.token.tenantId == resource.data.tenantId;
+
+    // Fatores de emissao: publicos para leitura, nunca gravados pelo cliente.
+    // Publicar versao nova e operacao administrativa, feita fora do app.
+    match /fatores/{versao} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Dados de cliente. O tenant vem da custom claim do token, assinada pelo
+    // Firebase -- o cliente nao consegue forjar a sua. Nenhuma regra aqui
+    // confia em campo enviado no pedido.
+    match /tenants/{tenantId}/{documento=**} {
+      allow read: if pertenceAoTenant(tenantId);
+      allow write: if pertenceAoTenant(tenantId) && podeEscrever();
+    }
+
+    // Qualquer caminho nao previsto acima e negado.
+    match /{documento=**} {
+      allow read, write: if false;
+    }
+
+    function pertenceAoTenant(tenantId) {
+      return request.auth != null
+          && request.auth.token.tenant_id == tenantId;
+    }
+
+    function podeEscrever() {
+      return request.auth.token.papel in ['operador', 'gestor'];
     }
   }
 }
-
