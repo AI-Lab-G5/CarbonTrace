@@ -1,4 +1,4 @@
-# CarbonTrace — Frontend
+# CarbonTrace - Frontend
 
 Interface web para acompanhamento e gestão do inventário de emissões de GEE.
 

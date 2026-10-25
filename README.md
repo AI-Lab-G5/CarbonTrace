@@ -64,3 +64,13 @@ npm run lint
 # Checagem de tipos (tsc) e build de produção (vite)
 npm run build
 ```
+
+## Escopo e planejamento vigentes (25/10/2026)
+
+O alvo aprovado é um CRUD de consumos para um único perfil funcionario, com login individual e acesso às unidades da própria empresa. Fontes: eletricidade, diesel, gasolina e GLP; eletricidade kWh/MWh, diesel/gasolina L e GLP kg. Gás natural e resíduos/Escopo 3 presentes no seed antigo não fazem parte do catálogo aprovado.
+
+O CP2 de 01/11 cobre J1 cadastro de unidades/fontes, J2 coleta mensal validada e J3 cálculo com fatores versionados, localmente. São 10 issues ativas, cinco por sprint e uma por integrante. J4/J5 (dashboard/ranking/mediana e PDF/CSV) continuam no MVP para as etapas seguintes. Revisões concorrentes, cancelamento avançado, snapshots completos da rede e idempotência de 24h não bloqueiam este gate.
+
+O código desta base ainda contém atalhos e decisões anteriores. Este texto não declara o CP2 entregue: papéis antigos/cabeçalhos debug, floats, seed com fontes excluídas e Rules permissivas precisam de adequação pelas issues existentes. Não usar a documentação ou os testes já existentes como prova automática do recorte novo.
+
+Ver [distribuição e diferenças observadas](docs/planejamento-checkpoint-2.md), [decisão de produto](https://github.com/AI-Lab-G5/documentacao/blob/main/docs/adr/ADR-008-recorte-crud.md) e [backlog completo](https://github.com/AI-Lab-G5/documentacao/blob/main/docs/backlog/MoSCoW.md). A OpenAPI de docs/api/openapi.yaml deste repositório descreve a base anterior; o contrato-alvo 0.2.0 está em documentacao e não comprova compatibilidade do código atual.
