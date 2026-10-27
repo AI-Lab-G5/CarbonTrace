@@ -1,12 +1,14 @@
-# Gerado a partir do codigo: python -c "from app.main import app; print(app.openapi())"
 # Nao editar a mao -- o contrato segue a implementacao.
 
 openapi: 3.1.0
 info:
   title: CarbonTrace API
-  description: Inventario de emissoes de GEE para redes de varejo e franquias. Todo dado de cliente vive
-    sob /tenants/{tenantId}/ e o tenant vem da identidade do chamador, nunca de parametro do cliente.
+  description: Inventario de emissoes de GEE para redes de varejo e franquias. Todo
+    dado de cliente vive sob /tenants/{tenantId}/ e o tenant vem da identidade do
+    chamador, nunca de parametro do cliente.
   version: 0.1.0
+  license:
+    name: Proprietary
 paths:
   /health:
     get:
@@ -31,6 +33,7 @@ paths:
                 additionalProperties: true
                 type: object
                 title: Response Health Health Get
+      security: []
   /v1/unidades:
     get:
       tags:
@@ -86,6 +89,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Token ausente, inválido ou expirado
+        '403':
+          description: Usuário sem acesso ao tenant
     post:
       tags:
       - unidades
@@ -143,6 +150,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Token ausente, inválido ou expirado
+        '403':
+          description: Usuário sem acesso ao tenant
   /v1/unidades/{unidade_id}:
     get:
       tags:
@@ -201,6 +212,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Token ausente, inválido ou expirado
+        '403':
+          description: Usuário sem acesso ao tenant
   /v1/registros:
     get:
       tags:
@@ -272,6 +287,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Token ausente, inválido ou expirado
+        '403':
+          description: Usuário sem acesso ao tenant
     put:
       tags:
       - registros
@@ -335,6 +354,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Token ausente, inválido ou expirado
+        '403':
+          description: Usuário sem acesso ao tenant
   /v1/fatores/versoes:
     get:
       tags:
@@ -390,6 +413,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Token ausente, inválido ou expirado
+        '403':
+          description: Usuário sem acesso ao tenant
   /v1/fatores/{versao}:
     get:
       tags:
@@ -448,6 +475,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Token ausente, inválido ou expirado
+        '403':
+          description: Usuário sem acesso ao tenant
   /v1/consolidado:
     get:
       tags:
@@ -508,6 +539,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+        '401':
+          description: Token ausente, inválido ou expirado
+        '403':
+          description: Usuário sem acesso ao tenant
 components:
   schemas:
     Consolidado:
@@ -750,3 +785,16 @@ components:
       - fatores
       title: VersaoFatores
       description: Conjunto imutavel de fatores, identificado por versao.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Firebase ID token obtido no login do frontend.
+servers:
+- url: http://localhost:3001
+  description: Desenvolvimento local
+- url: https://api.carbontrace.app
+  description: Produção
+security:
+- bearerAuth: []

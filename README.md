@@ -6,7 +6,7 @@ Plataforma de inventário e gestão de emissões de gases de efeito estufa (GEE)
 
 - **Frontend:** React + TypeScript + Vite + Nginx
 - **Backend:** FastAPI + Python 3.12 (`backend/`)
-- **Emuladores:** Firebase Auth e Cloud Firestore (`infra/emulator/`)
+- **Emuladores:** Firebase Auth e Cloud Firestore (`emulator/`, config em `firebase/`)
 
 ---
 

@@ -5,7 +5,7 @@
 # Tudo roda local: nenhum destes servicos alcanca a nuvem, e o gasto no GCP
 # ate a Semana 4 permanece zero.
 #
-#   docker compose -f docker-compose.yml up
+#   docker compose up
 
 services:
   firebase-emulator:
@@ -21,7 +21,7 @@ services:
     healthcheck:
       # O backend so sobe depois que o emulador aceita conexao de verdade.
       # "container iniciado" nao e o mesmo que "pronto para responder".
-      test: ["CMD-SHELL", "curl -fsS http://localhost:4400/emulators || exit 1", "-z", "localhost", "8080"]
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4400/emulators || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 12
@@ -31,7 +31,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    env_file: ./backend/.env
+    env_file: 
+    - path: ./backend/.env
+      required: false # make setup cria o .env; clone sem ele não trava o compose
     environment:
       FIRESTORE_EMULATOR_HOST: firebase-emulator:8080
       FIREBASE_AUTH_EMULATOR_HOST: firebase-emulator:9099
