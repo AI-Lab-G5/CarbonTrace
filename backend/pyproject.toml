@@ -1,6 +1,6 @@
 [project]
 name = "carbontrace-api"
-version = "0.1.0"
+version = "0.2.0"
 description = "API de inventario de emissoes de GEE para redes de varejo"
 requires-python = ">=3.12"
 
@@ -34,3 +34,6 @@ extend-immutable-calls = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
+markers = [
+    "precisa_banco: usa o duble de Firestore em memoria (ver tests/duble_firestore.py)",
+]

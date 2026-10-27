@@ -4,15 +4,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import consolidado, fatores, health, registros, unidades
+from app.routers import consolidado, consumos, fontes, health, unidades
 
 app = FastAPI(
     title="CarbonTrace API",
-    version="0.1.0",
+    version="0.2.0",
     description=(
-        "Inventario de emissoes de GEE para redes de varejo e franquias. "
-        "Todo dado de cliente vive sob /tenants/{tenantId}/ e o tenant vem "
-        "da identidade do chamador, nunca de parametro do cliente."
+        "Inventario de emissoes de GEE para redes de varejo e franquias.\n\n"
+        "Quantidades e fatores trafegam como texto, nao como numero decimal: "
+        "o calculo e feito em Decimal do inicio ao fim para que dois recalculos "
+        "do mesmo periodo devolvam exatamente o mesmo resultado.\n\n"
+        "Todo dado de cliente vive sob /tenants/{tenantId}/ e o tenant vem das "
+        "claims do ID token, nunca de parametro do cliente. Apenas /healthz e "
+        "/readyz sao publicas."
     ),
 )
 
@@ -26,6 +30,6 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(unidades.router)
-app.include_router(registros.router)
-app.include_router(fatores.router)
+app.include_router(fontes.router)
+app.include_router(consumos.router)
 app.include_router(consolidado.router)
