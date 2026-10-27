@@ -34,7 +34,7 @@ def _chave_natural(entrada: ConsumoEntrada) -> str:
 
 def _erro_422(erro: ErroDeDominio) -> HTTPException:
     return HTTPException(
-        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+         status_code=422,
         detail=erro.mensagem(),
     )
 
