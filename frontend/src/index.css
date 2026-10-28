@@ -1,52 +1,47 @@
+/* ============================================================
+   CarbonTrace — Estilos Globais e Variáveis de Tema (Base do Novo Modelo)
+   ============================================================ */
 :root {
-  --bg-color: #f8fafc;
-  --card-bg: #ffffff;
-  --text-primary: #0f172a;
-  --text-secondary: #475569;
-  --border-color: #e2e8f0;
-  --primary-color: #0d9488;
-  --success-color: #16a34a;
-  --success-bg: #f0fdf4;
-  --success-border: #bbf7d0;
-  --error-color: #dc2626;
-  --error-bg: #fef2f2;
-  --error-border: #fecaca;
-  --loading-color: #2563eb;
-  --loading-bg: #eff6ff;
-  --loading-border: #bfdbfe;
-  --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-}
+  --bg: #0b1220;
+  --bg-soft: #111c30;
+  --card: #16233b;
+  --line: #24344f;
+  --text: #e8eef8;
+  --muted: #9db0cb;
+  --accent: #35d39a;
+  --accent-dark: #17a97a;
+  --radius: 14px;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg-color: #0f172a;
-    --card-bg: #1e293b;
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --border-color: #334155;
-    --primary-color: #14b8a6;
-    --success-color: #4ade80;
-    --success-bg: #052e16;
-    --success-border: #166534;
-    --error-color: #f87171;
-    --error-bg: #450a0a;
-    --error-border: #991b1b;
-    --loading-color: #60a5fa;
-    --loading-bg: #172554;
-    --loading-border: #1e40af;
-  }
+  /* Estados de API e feedback */
+  --status-loading: #60a5fa;
+  --status-loading-bg: #172554;
+  --status-loading-border: #1e40af;
+  --status-success: #35d39a;
+  --status-success-bg: #064e3b;
+  --status-success-border: #047857;
+  --status-error: #f87171;
+  --status-error-bg: #450a0a;
+  --status-error-border: #991b1b;
 }
 
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  font-family: var(--font-family);
-  background-color: var(--bg-color);
-  color: var(--text-primary);
-  line-height: 1.5;
+  margin: 0;
+  font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+  background: radial-gradient(1100px 600px at 15% -10%, #17314f 0%, var(--bg) 55%);
+  color: var(--text);
+  line-height: 1.55;
   min-height: 100vh;
+}
+
+.wrap {
+  width: min(1040px, 92vw);
+  margin-inline: auto;
 }
