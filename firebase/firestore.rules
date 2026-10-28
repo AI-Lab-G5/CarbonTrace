@@ -2,12 +2,15 @@ rules_version = '2';
 
 // Regras de seguranca do Firestore -- CarbonTrace.
 //
-// Nota de escopo (Checkpoint 1): no MVP o acesso ao Firestore passa pela
-// API, que ja valida identidade e tenant. Estas regras sao a segunda
-// barreira, para o caso de alguem chamar o Firestore direto do navegador.
+// O acesso ao Firestore passa pela API, que ja valida identidade e
+// tenant. Estas regras sao a segunda barreira, para o caso de alguem
+// chamar o Firestore direto do navegador -- e a unica que continua de pe
+// se a API tiver um defeito de autorizacao.
 //
-// A versao deny-all com testes completos de autorizacao e entrega da
-// Semana 4, conforme o cronograma.
+// Atualizado no CP2: a colecao de dados passou de 'registros' para
+// 'consumos' e o unico papel do sistema e 'funcionario' (ver
+// docs/planejamento-checkpoint-2.md). Quem valida estas regras contra o
+// emulador e o QA, na issue #24.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -37,8 +40,10 @@ service cloud.firestore {
           && request.auth.token.tenant_id == tenantId;
     }
 
+    // Um unico papel no CP2. Os antigos 'operador' e 'gestor' saíram
+    // junto com a gestao de usuarios, que ficou fora do recorte.
     function podeEscrever() {
-      return request.auth.token.papel in ['operador', 'gestor'];
+      return request.auth.token.papel == 'funcionario';
     }
   }
 }

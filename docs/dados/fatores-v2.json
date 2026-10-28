@@ -1,0 +1,57 @@
+{
+  "versao": "v2",
+  "vigencia_inicio": "2026-01",
+  "vigencia_fim": null,
+  "publicado_em": "2026-10-27",
+  "status": "preliminar",
+  "aviso": "Status 'preliminar', mesma ressalva da v1. Esta versao existe para provar o CA-03: o fator de eletricidade muda, e lancamentos de 2025 continuam calculados pela v1, com o mesmo resultado de antes.",
+  "mudancas_desde_v1": [
+    "eletricidade: 0.0385 -> 0.0426 kgCO2e/kWh (ano-base diferente do SIN)"
+  ],
+  "fatores": [
+    {
+      "fonte_id": "eletricidade",
+      "nome": "Energia eletrica da rede (SIN)",
+      "escopo": "2",
+      "unidade_base": "kWh",
+      "unidades_aceitas": ["kWh", "MWh"],
+      "kg_co2e_por_unidade": "0.0426",
+      "teto_mensal": "1000000",
+      "fonte_referencia": "MCTI - Fatores medios de emissao do SIN",
+      "status": "preliminar"
+    },
+    {
+      "fonte_id": "diesel",
+      "nome": "Oleo diesel - frota propria e geradores",
+      "escopo": "1",
+      "unidade_base": "L",
+      "unidades_aceitas": ["L"],
+      "kg_co2e_por_unidade": "2.6",
+      "teto_mensal": "200000",
+      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 3",
+      "status": "preliminar"
+    },
+    {
+      "fonte_id": "gasolina",
+      "nome": "Gasolina - frota propria",
+      "escopo": "1",
+      "unidade_base": "L",
+      "unidades_aceitas": ["L"],
+      "kg_co2e_por_unidade": "2.21",
+      "teto_mensal": "100000",
+      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 3",
+      "status": "preliminar"
+    },
+    {
+      "fonte_id": "glp",
+      "nome": "GLP - cozinha e aquecimento",
+      "escopo": "1",
+      "unidade_base": "kg",
+      "unidades_aceitas": ["kg"],
+      "kg_co2e_por_unidade": "2.93",
+      "teto_mensal": "50000",
+      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 2",
+      "status": "preliminar"
+    }
+  ]
+}

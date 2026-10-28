@@ -1,57 +1,55 @@
 {
   "versao": "v1",
   "vigencia_inicio": "2025-01",
-  "publicado_em": "2026-10-17",
-  "status": "rascunho",
-  "aviso": "Valores de partida para desenvolvimento. Cada fator precisa ser conferido na fonte oficial antes do Demo Day -- ver docs/dados/ficha-metodologica.md.",
+  "vigencia_fim": null,
+  "publicado_em": "2026-10-27",
+  "status": "preliminar",
+  "aviso": "Status 'preliminar': os valores estao na ordem de grandeza correta e servem para desenvolver e testar, mas ainda nao foram conferidos na fonte oficial com citacao de tabela e pagina. Ver docs/dados/ficha-metodologica.md. Publicar como 'vigente' exige essa conferencia.",
+  "observacao_tipos": "kg_co2e_por_unidade e teto_mensal sao texto de proposito: numero decimal em JSON chega como float e perde exatidao antes de virar Decimal.",
   "fatores": [
     {
-      "fonte_id": "energia_eletrica_sin",
+      "fonte_id": "eletricidade",
       "nome": "Energia eletrica da rede (SIN)",
       "escopo": "2",
-      "unidade_medida": "kWh",
-      "kg_co2e_por_unidade": 0.0385,
-      "fonte_referencia": "MCTI - Fatores medios de emissao do SIN (media anual)"
+      "unidade_base": "kWh",
+      "unidades_aceitas": ["kWh", "MWh"],
+      "kg_co2e_por_unidade": "0.0385",
+      "teto_mensal": "1000000",
+      "fonte_referencia": "MCTI - Fatores medios de emissao do SIN",
+      "status": "preliminar"
     },
     {
-      "fonte_id": "gas_natural",
-      "nome": "Gas natural (combustao estacionaria)",
+      "fonte_id": "diesel",
+      "nome": "Oleo diesel - frota propria e geradores",
       "escopo": "1",
-      "unidade_medida": "m3",
-      "kg_co2e_por_unidade": 1.93,
-      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 2"
+      "unidade_base": "L",
+      "unidades_aceitas": ["L"],
+      "kg_co2e_por_unidade": "2.6",
+      "teto_mensal": "200000",
+      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 3",
+      "status": "preliminar"
+    },
+    {
+      "fonte_id": "gasolina",
+      "nome": "Gasolina - frota propria",
+      "escopo": "1",
+      "unidade_base": "L",
+      "unidades_aceitas": ["L"],
+      "kg_co2e_por_unidade": "2.21",
+      "teto_mensal": "100000",
+      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 3",
+      "status": "preliminar"
     },
     {
       "fonte_id": "glp",
-      "nome": "GLP (cozinha e aquecimento)",
+      "nome": "GLP - cozinha e aquecimento",
       "escopo": "1",
-      "unidade_medida": "kg",
-      "kg_co2e_por_unidade": 2.93,
-      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 2"
-    },
-    {
-      "fonte_id": "diesel_frota",
-      "nome": "Diesel - frota propria",
-      "escopo": "1",
-      "unidade_medida": "L",
-      "kg_co2e_por_unidade": 2.6,
-      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 3"
-    },
-    {
-      "fonte_id": "gasolina_frota",
-      "nome": "Gasolina - frota propria",
-      "escopo": "1",
-      "unidade_medida": "L",
-      "kg_co2e_por_unidade": 2.21,
-      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 3"
-    },
-    {
-      "fonte_id": "residuo_aterro",
-      "nome": "Residuo solido enviado a aterro",
-      "escopo": "3",
-      "unidade_medida": "kg",
-      "kg_co2e_por_unidade": 0.58,
-      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 5"
+      "unidade_base": "kg",
+      "unidades_aceitas": ["kg"],
+      "kg_co2e_por_unidade": "2.93",
+      "teto_mensal": "50000",
+      "fonte_referencia": "IPCC 2006 Guidelines, Vol. 2, Cap. 2",
+      "status": "preliminar"
     }
   ]
 }

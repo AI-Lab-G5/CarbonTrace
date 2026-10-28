@@ -1,29 +1,29 @@
-# Nao editar a mao -- o contrato segue a implementacao.
-
 openapi: 3.1.0
 info:
   title: CarbonTrace API
-  description: Inventario de emissoes de GEE para redes de varejo e franquias. Todo
-    dado de cliente vive sob /tenants/{tenantId}/ e o tenant vem da identidade do
-    chamador, nunca de parametro do cliente.
-  version: 0.1.0
-  license:
-    name: Proprietary
+  description: 'Inventario de emissoes de GEE para redes de varejo e franquias.
+
+
+    Quantidades e fatores trafegam como texto, nao como numero decimal: o calculo
+    e feito em Decimal do inicio ao fim para que dois recalculos do mesmo periodo
+    devolvam exatamente o mesmo resultado.
+
+
+    Todo dado de cliente vive sob /tenants/{tenantId}/ e o tenant vem das claims do
+    ID token, nunca de parametro do cliente. Apenas /healthz e /readyz sao publicas.'
+  version: 0.2.0
 paths:
-  /health:
+  /healthz:
     get:
       tags:
       - infra
-      summary: Health
-      description: 'Prova de vida da API.
-
-
-        Usado pelo healthcheck do Docker Compose e pelo teste de fumaca do CI.
-
-        Nao toca no Firestore de proposito: se o banco cair, o container ainda
-
-        responde e o log mostra onde esta o problema.'
-      operationId: health_health_get
+      summary: Prova de vida do processo
+      description: '**Rota publica, sem autenticacao.** Excecao acordada com o Tech
+        Lead e registrada no CA-02: a sonda de liveness e chamada pelo orquestrador,
+        que nao tem token, e precisa responder mesmo quando o Firebase Auth esta fora
+        do ar -- se exigisse token, uma falha de autenticacao derrubaria a aplicacao
+        inteira. Nao expoe nenhum dado de cliente.'
+      operationId: healthz_healthz_get
       responses:
         '200':
           description: Successful Response
@@ -32,105 +32,73 @@ paths:
               schema:
                 additionalProperties: true
                 type: object
-                title: Response Health Health Get
-      security: []
-  /v1/unidades:
+                title: Response Healthz Healthz Get
+  /readyz:
     get:
       tags:
-      - unidades
-      summary: Listar
-      operationId: listar_v1_unidades_get
-      parameters:
-      - name: authorization
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Authorization
-      - name: x-debug-uid
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Uid
-      - name: x-debug-tenant
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Tenant
-      - name: x-debug-papel
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Papel
+      - infra
+      summary: Prontidao para atender
+      description: '**Rota publica, sem autenticacao.** Mesma excecao do /healthz.
+        Responde 200 quando o Firestore responde e 503 quando nao. A mensagem de erro
+        do 503 nao inclui dado de cliente.'
+      operationId: readyz_readyz_get
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Unidade'
-                title: Response Listar V1 Unidades Get
+                additionalProperties: true
+                type: object
+                title: Response Readyz Readyz Get
+  /v1/unidades:
+    get:
+      tags:
+      - unidades
+      summary: Listar
+      operationId: listar_v1_unidades_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: limite
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limite
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          description: proximo_cursor da pagina anterior
+          title: Cursor
+        description: proximo_cursor da pagina anterior
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pagina_Unidade_'
         '422':
           description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Token ausente, inválido ou expirado
-        '403':
-          description: Usuário sem acesso ao tenant
     post:
       tags:
       - unidades
       summary: Criar
       operationId: criar_v1_unidades_post
-      parameters:
-      - name: authorization
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Authorization
-      - name: x-debug-uid
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Uid
-      - name: x-debug-tenant
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Tenant
-      - name: x-debug-papel
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Papel
+      security:
+      - HTTPBearer: []
       requestBody:
         required: true
         content:
@@ -150,16 +118,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Token ausente, inválido ou expirado
-        '403':
-          description: Usuário sem acesso ao tenant
   /v1/unidades/{unidade_id}:
     get:
       tags:
       - unidades
       summary: Obter
       operationId: obter_v1_unidades__unidade_id__get
+      security:
+      - HTTPBearer: []
       parameters:
       - name: unidade_id
         in: path
@@ -167,38 +133,6 @@ paths:
         schema:
           type: string
           title: Unidade Id
-      - name: authorization
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Authorization
-      - name: x-debug-uid
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Uid
-      - name: x-debug-tenant
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Tenant
-      - name: x-debug-papel
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Papel
       responses:
         '200':
           description: Successful Response
@@ -212,16 +146,99 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Token ausente, inválido ou expirado
-        '403':
-          description: Usuário sem acesso ao tenant
-  /v1/registros:
+  /v1/fontes:
     get:
       tags:
-      - registros
+      - fontes
       summary: Listar
-      operationId: listar_v1_registros_get
+      description: 'Fontes vigentes na competencia pedida, ou no mes corrente.
+
+
+        O front usa esta rota para montar o seletor de fonte e saber quais
+
+        unidades de medida aceitar em cada uma.'
+      operationId: listar_v1_fontes_get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: competencia
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Competencia
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Fator'
+                title: Response Listar V1 Fontes Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/fontes/versoes:
+    get:
+      tags:
+      - fontes
+      summary: Versoes
+      operationId: versoes_v1_fontes_versoes_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  type: string
+                type: array
+                title: Response Versoes V1 Fontes Versoes Get
+      security:
+      - HTTPBearer: []
+  /v1/fontes/versoes/{versao}:
+    get:
+      tags:
+      - fontes
+      summary: Obter Versao
+      operationId: obter_versao_v1_fontes_versoes__versao__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: versao
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Versao
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersaoFatores'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /v1/consumos:
+    get:
+      tags:
+      - consumos
+      summary: Listar
+      operationId: listar_v1_consumos_get
+      security:
+      - HTTPBearer: []
       parameters:
       - name: competencia
         in: query
@@ -239,293 +256,155 @@ paths:
           - type: string
           - type: 'null'
           title: Unidade Id
-      - name: authorization
-        in: header
+      - name: limite
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limite
+      - name: cursor
+        in: query
         required: false
         schema:
           anyOf:
           - type: string
           - type: 'null'
-          title: Authorization
-      - name: x-debug-uid
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Uid
-      - name: x-debug-tenant
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Tenant
-      - name: x-debug-papel
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Papel
+          description: proximo_cursor da pagina anterior
+          title: Cursor
+        description: proximo_cursor da pagina anterior
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Registro'
-                title: Response Listar V1 Registros Get
+                $ref: '#/components/schemas/Pagina_Consumo_'
         '422':
           description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Token ausente, inválido ou expirado
-        '403':
-          description: Usuário sem acesso ao tenant
     put:
       tags:
-      - registros
+      - consumos
       summary: Registrar
-      description: 'Grava ou atualiza um lancamento.
+      description: 'Grava ou atualiza um lancamento, ja calculado.
 
 
-        PUT, e nao POST, justamente porque a operacao e idempotente: o mesmo
+        PUT e nao POST porque a operacao e idempotente: o mesmo pedido
 
-        pedido repetido leva ao mesmo estado, sem efeito colateral extra.'
-      operationId: registrar_v1_registros_put
-      parameters:
-      - name: authorization
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Authorization
-      - name: x-debug-uid
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Uid
-      - name: x-debug-tenant
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Tenant
-      - name: x-debug-papel
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Papel
+        repetido leva ao mesmo estado, sem lancamento duplicado.'
+      operationId: registrar_v1_consumos_put
+      security:
+      - HTTPBearer: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RegistroEntrada'
+              $ref: '#/components/schemas/ConsumoEntrada'
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Registro'
+                $ref: '#/components/schemas/Consumo'
         '422':
           description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Token ausente, inválido ou expirado
-        '403':
-          description: Usuário sem acesso ao tenant
-  /v1/fatores/versoes:
+  /v1/consumos/{consumo_id}:
     get:
       tags:
-      - fatores
-      summary: Versoes
-      operationId: versoes_v1_fatores_versoes_get
-      parameters:
-      - name: authorization
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Authorization
-      - name: x-debug-uid
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Uid
-      - name: x-debug-tenant
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Tenant
-      - name: x-debug-papel
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Papel
-      responses:
-        '200':
-          description: Successful Response
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: string
-                title: Response Versoes V1 Fatores Versoes Get
-        '422':
-          description: Validation Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Token ausente, inválido ou expirado
-        '403':
-          description: Usuário sem acesso ao tenant
-  /v1/fatores/{versao}:
-    get:
-      tags:
-      - fatores
+      - consumos
       summary: Obter
-      operationId: obter_v1_fatores__versao__get
+      operationId: obter_v1_consumos__consumo_id__get
+      security:
+      - HTTPBearer: []
       parameters:
-      - name: versao
+      - name: consumo_id
         in: path
         required: true
         schema:
           type: string
-          title: Versao
-      - name: authorization
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Authorization
-      - name: x-debug-uid
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Uid
-      - name: x-debug-tenant
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Tenant
-      - name: x-debug-papel
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Papel
+          title: Consumo Id
       responses:
         '200':
           description: Successful Response
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/VersaoFatores'
+                $ref: '#/components/schemas/Consumo'
         '422':
           description: Validation Error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Token ausente, inválido ou expirado
-        '403':
-          description: Usuário sem acesso ao tenant
+  /v1/consumos/{consumo_id}/recalculo:
+    post:
+      tags:
+      - consumos
+      summary: Conferir Recalculo
+      description: 'Refaz a conta com o fator original e confere contra o gravado.
+
+
+        Prova do CA-03, disponivel para auditoria: mesmo que uma versao nova
+
+        de fatores tenha sido publicada, este endpoint usa a versao que o
+
+        lancamento registrou. O valor tem de bater com o guardado -- se
+
+        divergir, ha defeito no motor de calculo, e 500 e a resposta certa
+
+        porque o erro e nosso, nao de quem chamou.'
+      operationId: conferir_recalculo_v1_consumos__consumo_id__recalculo_post
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: consumo_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Consumo Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consumo'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
   /v1/consolidado:
     get:
       tags:
       - consolidado
       summary: Obter
       operationId: obter_v1_consolidado_get
+      security:
+      - HTTPBearer: []
       parameters:
       - name: competencia
         in: query
         required: true
         schema:
           type: string
-          description: Mes de referencia, no formato AAAA-MM
+          description: Mes de referencia, formato AAAA-MM
           title: Competencia
-        description: Mes de referencia, no formato AAAA-MM
-      - name: authorization
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Authorization
-      - name: x-debug-uid
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Uid
-      - name: x-debug-tenant
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Tenant
-      - name: x-debug-papel
-        in: header
-        required: false
-        schema:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: X-Debug-Papel
+        description: Mes de referencia, formato AAAA-MM
       responses:
         '200':
           description: Successful Response
@@ -539,10 +418,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
-        '401':
-          description: Token ausente, inválido ou expirado
-        '403':
-          description: Usuário sem acesso ao tenant
 components:
   schemas:
     Consolidado:
@@ -551,10 +426,12 @@ components:
           type: string
           title: Competencia
         total_kg_co2e:
-          type: number
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Total Kg Co2E
         mediana_kg_co2e:
-          type: number
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Mediana Kg Co2E
         por_unidade:
           items:
@@ -568,7 +445,110 @@ components:
       - mediana_kg_co2e
       - por_unidade
       title: Consolidado
-      description: Agregado da rede em uma competencia.
+      description: Agregado da rede numa competencia.
+    Consumo:
+      properties:
+        id:
+          type: string
+          title: Id
+        unidade_id:
+          type: string
+          title: Unidade Id
+        competencia:
+          type: string
+          title: Competencia
+        fonte_id:
+          type: string
+          title: Fonte Id
+        quantidade_informada:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Quantidade Informada
+        unidade_informada:
+          type: string
+          title: Unidade Informada
+        quantidade_convertida:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Quantidade Convertida
+        unidade_base:
+          type: string
+          title: Unidade Base
+        fator_versao:
+          type: string
+          title: Fator Versao
+        fator_valor:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Fator Valor
+        emissao_kg_co2e:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Emissao Kg Co2E
+        escopo:
+          type: string
+          enum:
+          - '1'
+          - '2'
+          title: Escopo
+      type: object
+      required:
+      - id
+      - unidade_id
+      - competencia
+      - fonte_id
+      - quantidade_informada
+      - unidade_informada
+      - quantidade_convertida
+      - unidade_base
+      - fator_versao
+      - fator_valor
+      - emissao_kg_co2e
+      - escopo
+      title: Consumo
+      description: 'Lancamento ja calculado e persistido.
+
+
+        Guarda a versao e o valor do fator aplicado. E o que permite
+
+        recalcular o periodo depois, com o fator da epoca, e obter o
+
+        mesmo numero.'
+    ConsumoEntrada:
+      properties:
+        unidade_id:
+          type: string
+          minLength: 1
+          title: Unidade Id
+        competencia:
+          type: string
+          title: Competencia
+          description: Mes de referencia, formato AAAA-MM
+        fonte_id:
+          type: string
+          minLength: 1
+          title: Fonte Id
+        quantidade:
+          anyOf:
+          - type: number
+          - type: string
+            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Quantidade
+          description: 'Texto, ex.: "1500.5"'
+        unidade_medida:
+          type: string
+          maxLength: 10
+          minLength: 1
+          title: Unidade Medida
+      type: object
+      required:
+      - unidade_id
+      - competencia
+      - fonte_id
+      - quantidade
+      - unidade_medida
+      title: ConsumoEntrada
+      description: Lancamento mensal de uma fonte numa unidade.
     Fator:
       properties:
         fonte_id:
@@ -582,25 +562,50 @@ components:
           enum:
           - '1'
           - '2'
-          - '3'
           title: Escopo
-        unidade_medida:
+        unidade_base:
           type: string
-          title: Unidade Medida
+          title: Unidade Base
+        unidades_aceitas:
+          items:
+            type: string
+          type: array
+          title: Unidades Aceitas
         kg_co2e_por_unidade:
-          type: number
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Kg Co2E Por Unidade
+        teto_mensal:
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
+          title: Teto Mensal
+          description: 'Quantidade maxima aceita num lancamento mensal, na unidade
+            base. Conferido DEPOIS da conversao de unidade: 1001 MWh sao comparados
+            como 1.001.000 kWh. Valores vigentes: eletricidade 1000000 kWh, diesel
+            200000 L, gasolina 100000 L, GLP 50000 kg. E um filtro contra erro de
+            digitacao, nao um limite de negocio; o valor vem do catalogo e muda publicando
+            versao nova.'
         fonte_referencia:
           type: string
           title: Fonte Referencia
+        status:
+          type: string
+          enum:
+          - preliminar
+          - vigente
+          - substituido
+          title: Status
       type: object
       required:
       - fonte_id
       - nome
       - escopo
-      - unidade_medida
+      - unidade_base
+      - unidades_aceitas
       - kg_co2e_por_unidade
+      - teto_mensal
       - fonte_referencia
+      - status
       title: Fator
       description: Fator de conversao de uma fonte de emissao.
     HTTPValidationError:
@@ -621,7 +626,8 @@ components:
           type: string
           title: Unidade Nome
         emissao_kg_co2e:
-          type: number
+          type: string
+          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Emissao Kg Co2E
       type: object
       required:
@@ -629,83 +635,56 @@ components:
       - unidade_nome
       - emissao_kg_co2e
       title: LinhaConsolidado
-    Registro:
+    Pagina_Consumo_:
       properties:
-        id:
-          type: string
-          title: Id
-        unidade_id:
-          type: string
-          title: Unidade Id
-        competencia:
-          type: string
-          title: Competencia
-        fonte_id:
-          type: string
-          title: Fonte Id
-        quantidade:
-          type: number
-          title: Quantidade
-        unidade_medida:
-          type: string
-          title: Unidade Medida
-        fator_versao:
-          type: string
-          title: Fator Versao
-        fator_valor:
-          type: number
-          title: Fator Valor
-        emissao_kg_co2e:
-          type: number
-          title: Emissao Kg Co2E
-        escopo:
-          type: string
-          enum:
-          - '1'
-          - '2'
-          - '3'
-          title: Escopo
+        itens:
+          items:
+            $ref: '#/components/schemas/Consumo'
+          type: array
+          title: Itens
+        total_na_pagina:
+          type: integer
+          title: Total Na Pagina
+        limite:
+          type: integer
+          title: Limite
+        proximo_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Proximo Cursor
+          description: Passe em 'cursor' para a proxima pagina. Nulo no fim.
       type: object
       required:
-      - id
-      - unidade_id
-      - competencia
-      - fonte_id
-      - quantidade
-      - unidade_medida
-      - fator_versao
-      - fator_valor
-      - emissao_kg_co2e
-      - escopo
-      title: Registro
-      description: Lancamento ja calculado e persistido.
-    RegistroEntrada:
+      - itens
+      - total_na_pagina
+      - limite
+      title: Pagina[Consumo]
+    Pagina_Unidade_:
       properties:
-        unidade_id:
-          type: string
-          minLength: 1
-          title: Unidade Id
-        competencia:
-          type: string
-          title: Competencia
-          description: Mes de referencia, no formato AAAA-MM
-        fonte_id:
-          type: string
-          minLength: 1
-          title: Fonte Id
-          description: 'Ex.: energia_eletrica_sin'
-        quantidade:
-          type: number
-          exclusiveMinimum: 0.0
-          title: Quantidade
+        itens:
+          items:
+            $ref: '#/components/schemas/Unidade'
+          type: array
+          title: Itens
+        total_na_pagina:
+          type: integer
+          title: Total Na Pagina
+        limite:
+          type: integer
+          title: Limite
+        proximo_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Proximo Cursor
+          description: Passe em 'cursor' para a proxima pagina. Nulo no fim.
       type: object
       required:
-      - unidade_id
-      - competencia
-      - fonte_id
-      - quantidade
-      title: RegistroEntrada
-      description: Lancamento mensal de uma fonte de emissao em uma unidade.
+      - itens
+      - total_na_pagina
+      - limite
+      title: Pagina[Unidade]
     Unidade:
       properties:
         id:
@@ -769,9 +748,21 @@ components:
         vigencia_inicio:
           type: string
           title: Vigencia Inicio
+        vigencia_fim:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Vigencia Fim
         publicado_em:
           type: string
           title: Publicado Em
+        status:
+          type: string
+          enum:
+          - preliminar
+          - vigente
+          - substituido
+          title: Status
         fatores:
           items:
             $ref: '#/components/schemas/Fator'
@@ -782,19 +773,12 @@ components:
       - versao
       - vigencia_inicio
       - publicado_em
+      - status
       - fatores
       title: VersaoFatores
       description: Conjunto imutavel de fatores, identificado por versao.
   securitySchemes:
-    bearerAuth:
+    HTTPBearer:
       type: http
+      description: ID token do Firebase
       scheme: bearer
-      bearerFormat: JWT
-      description: Firebase ID token obtido no login do frontend.
-servers:
-- url: http://localhost:3001
-  description: Desenvolvimento local
-- url: https://api.carbontrace.app
-  description: Produção
-security:
-- bearerAuth: []
