@@ -1,6 +1,68 @@
 # Stack de desenvolvimento do CarbonTrace.
-# Permite a execução direta na raiz do repositório:
-#   docker compose up --build
+#
+# Dono: DevOps. O servico "backend" e mantido pelo Backend.
+#
+# Tudo roda local: nenhum destes servicos alcanca a nuvem, e o gasto no GCP
+# ate a Semana 4 permanece zero.
+#
+#   docker compose up
 
-include:
-  - infra/dev/docker-compose.yml
+services:
+  firebase-emulator:
+    build: ./emulator
+    working_dir: /firebase
+    command: sh -c "npm install -g firebase-tools && firebase emulators:start --only auth,firestore"
+    ports:
+      - "4000:4000"   # interface do Emulator Suite
+      - "8080:8080"   # Firestore
+      - "9099:9099"   # Auth
+    volumes:
+      - ./firebase:/firebase
+    healthcheck:
+      # O backend so sobe depois que o emulador aceita conexao de verdade.
+      # "container iniciado" nao e o mesmo que "pronto para responder".
+      test: ["CMD-SHELL", "curl -fsS http://localhost:4400/emulators || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file: 
+    - path: ./backend/.env
+      required: false # make setup cria o .env; clone sem ele não trava o compose
+    environment:
+      FIRESTORE_EMULATOR_HOST: firebase-emulator:8080
+      FIREBASE_AUTH_EMULATOR_HOST: firebase-emulator:9099
+      FIREBASE_PROJECT_ID: demo-carbontrace
+      AUTH_MODE: emulator
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind mount para o --reload do uvicorn enxergar as alteracoes
+      # sem precisar refazer a imagem a cada linha editada.
+      - ./backend:/app
+      # docs/ vive na raiz do repositorio, fora do contexto de build do
+      # backend. Montar somente leitura deixa o seed ler o dataset de
+      # fatores sem duplicar o arquivo em dois lugares.
+      - ./docs:/docs:ro
+    depends_on:
+      firebase-emulator:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      BACKEND_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  firebase_data:
