@@ -1,11 +1,6 @@
 import { useState } from 'react';
-import type { FatoresEmissao, ResultadoCalculo } from '@/types/emissao';
-
-const FATORES_PADRAO: FatoresEmissao = {
-  energia: 0.0385,     // kg CO2e por kWh (grid BR, referência)
-  combustivel: 2.392,  // kg CO2e por litro (diesel)
-  residuos: 0.45,      // kg CO2e por kg de resíduo em aterro
-};
+import type { ResultadoCalculo } from '@/types/emissao';
+import { calcularEmissoes } from '@/utils/calculo';
 
 const fmtInteiro = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 });
 const fmtDecimal = new Intl.NumberFormat('pt-BR', {
@@ -18,29 +13,6 @@ export function Calculadora() {
   const [combustivel, setCombustivel] = useState<string>('800');
   const [residuos, setResiduos] = useState<string>('1500');
   const [resultado, setResultado] = useState<ResultadoCalculo | null>(null);
-
-  const calcularEmissoes = (kwhStr: string, combStr: string, resStr: string): ResultadoCalculo => {
-    const kwh = Math.max(0, parseFloat(kwhStr) || 0);
-    const comb = Math.max(0, parseFloat(combStr) || 0);
-    const res = Math.max(0, parseFloat(resStr) || 0);
-
-    const itens = [
-      { nome: 'Energia elétrica', emissao: kwh * FATORES_PADRAO.energia },
-      { nome: 'Frota (combustível)', emissao: comb * FATORES_PADRAO.combustivel },
-      { nome: 'Resíduos (aterro)', emissao: res * FATORES_PADRAO.residuos },
-    ];
-
-    const total = itens.reduce((soma, item) => soma + item.emissao, 0);
-
-    return {
-      total,
-      itens: itens.map((item) => ({
-        nome: item.nome,
-        emissao: item.emissao,
-        percentual: total > 0 ? (item.emissao / total) * 100 : 0,
-      })),
-    };
-  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
