@@ -1,6 +1,8 @@
 # Segredos -- nenhum destes pode entrar no historico
 .env
+*.env
 .env.local
+!*.env.example
 *firebase-adminsdk*.json
 serviceAccountKey.json
 *-key.json
@@ -27,3 +29,15 @@ ui-debug.log
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Vim
+*.swp
+*.swo
+
+# logs dos emuladores
+firestore-debug.log
+firebase-debug.log
+ui-debug.log
+
+
+dist/
