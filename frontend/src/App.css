@@ -1,5 +1,5 @@
 /* ============================================================
-   CarbonTrace — Estilos de Componentes (Novo Modelo)
+   CarbonTrace — Estilos de Componentes (Fundo Preto & Nova Logo)
    ============================================================ */
 
 /* ---------- Barra Superior (Topbar) ---------- */
@@ -7,8 +7,8 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  backdrop-filter: blur(8px);
-  background: rgba(11, 18, 32, 0.82);
+  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.88);
   border-bottom: 1px solid var(--line);
 }
 
@@ -17,19 +17,25 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.85rem 0;
+  padding: 0.65rem 0;
 }
 
-.brand {
-  font-weight: 700;
-  letter-spacing: 0.3px;
-  font-size: 1.15rem;
-  color: var(--text);
+.brand-logo {
+  display: flex;
+  align-items: center;
   text-decoration: none;
+  transition: opacity 0.15s ease;
 }
 
-.brand span {
-  color: var(--accent);
+.brand-logo:hover {
+  opacity: 0.9;
+}
+
+.logo-img {
+  height: 42px;
+  width: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .topbar-nav {
@@ -76,7 +82,7 @@
   border: 0;
   border-radius: 999px;
   background: var(--accent);
-  color: #04231a;
+  color: #000000;
   font-weight: 700;
   font-size: 0.95rem;
   cursor: pointer;
@@ -85,7 +91,7 @@
 }
 
 .btn:hover {
-  background: #4fe6b0;
+  background: #33ecad;
   transform: translateY(-1px);
 }
 
@@ -112,7 +118,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 1.75rem;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
 }
 
 .card h2 {
@@ -160,7 +166,7 @@ input[type="number"] {
 input[type="number"]:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(53, 211, 154, 0.18);
+  box-shadow: 0 0 0 3px rgba(0, 229, 153, 0.18);
 }
 
 /* ---------- Resultado da Calculadora ---------- */
@@ -213,7 +219,7 @@ input[type="number"]:focus {
   grid-column: 1 / -1;
   height: 6px;
   border-radius: 999px;
-  background: #0a1526;
+  background: #1a1a1a;
   overflow: hidden;
 }
 
@@ -351,7 +357,7 @@ input[type="number"]:focus {
 }
 
 code {
-  background: #0a1526;
+  background: #000000;
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 0.15rem 0.4rem;

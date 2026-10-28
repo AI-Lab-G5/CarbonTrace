@@ -1,23 +1,23 @@
 /* ============================================================
-   CarbonTrace — Estilos Globais e Variáveis de Tema (Base do Novo Modelo)
+   CarbonTrace — Estilos Globais e Variáveis de Tema (Fundo Preto)
    ============================================================ */
 :root {
-  --bg: #0b1220;
-  --bg-soft: #111c30;
-  --card: #16233b;
-  --line: #24344f;
-  --text: #e8eef8;
-  --muted: #9db0cb;
-  --accent: #35d39a;
-  --accent-dark: #17a97a;
+  --bg: #000000;
+  --bg-soft: #0e0e0e;
+  --card: #141414;
+  --line: #262626;
+  --text: #f3f4f6;
+  --muted: #9ca3af;
+  --accent: #00e599;
+  --accent-dark: #00b377;
   --radius: 14px;
 
   /* Estados de API e feedback */
   --status-loading: #60a5fa;
-  --status-loading-bg: #172554;
-  --status-loading-border: #1e40af;
-  --status-success: #35d39a;
-  --status-success-bg: #064e3b;
+  --status-loading-bg: #0f172a;
+  --status-loading-border: #1e3a8a;
+  --status-success: #00e599;
+  --status-success-bg: #052e16;
   --status-success-border: #047857;
   --status-error: #f87171;
   --status-error-bg: #450a0a;
@@ -30,12 +30,14 @@
 
 html {
   scroll-behavior: smooth;
+  background-color: #000000;
 }
 
 body {
   margin: 0;
   font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
-  background: radial-gradient(1100px 600px at 15% -10%, #17314f 0%, var(--bg) 55%);
+  background-color: #000000;
+  background: #000000;
   color: var(--text);
   line-height: 1.55;
   min-height: 100vh;
