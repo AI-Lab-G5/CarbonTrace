@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export interface HealthResponse {
   status: string;
@@ -20,6 +20,11 @@ interface ApiStatusProps {
 export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProps) {
   const [status, setStatus] = useState<ApiStatusState>({ state: 'loading' });
   const [retryKey, setRetryKey] = useState<number>(0);
+
+  const onStatusChangeRef = useRef(onStatusChange);
+  useEffect(() => {
+    onStatusChangeRef.current = onStatusChange;
+  }, [onStatusChange]);
 
   useEffect(() => {
     let ignore = false;
@@ -43,7 +48,7 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
             data,
           };
           setStatus(nextState);
-          onStatusChange?.(nextState);
+          onStatusChangeRef.current?.(nextState);
         }
       })
       .catch((err: unknown) => {
@@ -57,19 +62,19 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
           message: errorMessage,
         };
         setStatus(nextState);
-        onStatusChange?.(nextState);
+        onStatusChangeRef.current?.(nextState);
       });
 
     return () => {
       ignore = true;
       controller.abort();
     };
-  }, [apiBaseUrl, retryKey, onStatusChange]);
+  }, [apiBaseUrl, retryKey]);
 
   const handleRetry = () => {
     const nextState: ApiStatusState = { state: 'loading' };
     setStatus(nextState);
-    onStatusChange?.(nextState);
+    onStatusChangeRef.current?.(nextState);
     setRetryKey((prev) => prev + 1);
   };
 
@@ -141,4 +146,3 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
     </section>
   );
 }
-
