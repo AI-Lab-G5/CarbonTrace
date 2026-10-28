@@ -6,6 +6,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   # Lint do contrato OpenAPI (gerado pelo backend, normalizado antes do lint)
   lint:
