@@ -6,8 +6,8 @@ export function Topbar({ apiStatusBadge }: TopbarProps) {
   return (
     <header className="topbar">
       <div className="wrap">
-        <a href="#" className="brand">
-          🌱 Carbon<span>Trace</span>
+        <a href="#" className="brand-logo" aria-label="CarbonTrace">
+          <img src="/logo.png" alt="CarbonTrace" className="logo-img" />
         </a>
         <nav className="topbar-nav" aria-label="Navegação principal">
           <a href="#calculadora">Calculadora</a>
@@ -19,4 +19,3 @@ export function Topbar({ apiStatusBadge }: TopbarProps) {
     </header>
   );
 }
-
