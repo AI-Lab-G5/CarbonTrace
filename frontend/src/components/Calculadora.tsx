@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { FatoresEmissao, ResultadoCalculo } from '../types/emissao';
+import type { FatoresEmissao, ResultadoCalculo } from '@/types/emissao';
 
 const FATORES_PADRAO: FatoresEmissao = {
   energia: 0.0385,     // kg CO2e por kWh (grid BR, referência)
@@ -153,4 +153,3 @@ export function Calculadora() {
     </section>
   );
 }
-

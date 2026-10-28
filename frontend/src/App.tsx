@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { Topbar } from './components/Topbar';
-import { Hero } from './components/Hero';
-import { Calculadora } from './components/Calculadora';
-import { ApiStatus, type ApiStatusState } from './components/ApiStatus';
-import { ComoFunciona } from './components/ComoFunciona';
-import { Footer } from './components/Footer';
+import { Topbar } from '@/components/Topbar';
+import { Hero } from '@/components/Hero';
+import { Calculadora } from '@/components/Calculadora';
+import { ApiStatus, type ApiStatusState } from '@/components/ApiStatus';
+import { ComoFunciona } from '@/components/ComoFunciona';
+import { Footer } from '@/components/Footer';
 import './App.css';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
