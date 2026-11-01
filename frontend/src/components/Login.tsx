@@ -5,7 +5,7 @@ import { auth } from '@/auth';
 export function Login() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
-  return <section className="wrap card"><h1>Entrar no CarbonTrace</h1><p>Use sua conta individual preparada pela equipe.</p>
+  return <section className="wrap card"><h1>Entrar no CarbonTrace</h1><p>Ambiente local de demonstração. Use sua conta individual de teste preparada pela equipe.</p>
     <form onSubmit={async event => {
       event.preventDefault(); const data = new FormData(event.currentTarget); setBusy(true); setError('');
       try { await signInWithEmailAndPassword(auth, String(data.get('email')).trim(), String(data.get('password'))); }
