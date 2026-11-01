@@ -7,10 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint . --max-warnings 0",
-    "test": "node --experimental-strip-types --test tests/calculo.test.ts",
+    "test": "node --experimental-strip-types --test tests/decimal.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {
+    "firebase": "^13.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
