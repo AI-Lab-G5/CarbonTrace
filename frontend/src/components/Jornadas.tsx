@@ -20,6 +20,8 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
   const [reload, setReload] = useState(0);
   const [recordCursor, setRecordCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [catalogLoading, setCatalogLoading] = useState(false);
+  const [catalogError, setCatalogError] = useState('');
   const query = new URLSearchParams({ limite: '20', ...(unit ? { unidade_id: unit } : {}), ...(period ? { competencia: period } : {}) }).toString();
   async function api<T>(path: string, options?: RequestInit) {
     try { return await request<T>(path, await user.getIdToken(), options); }
@@ -45,8 +47,8 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
     if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return;
     const controller = new AbortController();
     user.getIdToken().then(token => request<Fator[]>(`/v1/fontes?competencia=${period}`, token, { signal: controller.signal }))
-      .then(data => { if (!controller.signal.aborted) setSources(data.filter(f => ['eletricidade', 'diesel', 'gasolina', 'glp'].includes(f.fonte_id))); })
-      .catch(e => { if (!controller.signal.aborted) { setError(e.message); if (e.status === 401) expired(); } });
+      .then(data => { if (!controller.signal.aborted) { setSources(data.filter(f => ['eletricidade', 'diesel', 'gasolina', 'glp'].includes(f.fonte_id))); setCatalogLoading(false); } })
+      .catch(e => { if (!controller.signal.aborted) { setCatalogError(e.message); setCatalogLoading(false); if (e.status === 401) expired(); } });
     return () => controller.abort();
   }, [user, period, reload, expired]);
   async function show(id: string) {
@@ -78,6 +80,7 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
     <section className="card"><h2>Registrar consumo</h2><form onSubmit={event => {
       event.preventDefault(); const data = new FormData(event.currentTarget); void action(async () => {
         const quantidade = decimalInput(String(data.get('quantidade')));
+        if (!unit || !source || !sources.find(f => f.fonte_id === source)?.unidades_aceitas.includes(String(data.get('medida')))) throw new Error('Selecione loja, fonte e medida compatível.');
         if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) throw new Error('Informe competência no formato AAAA-MM.');
         const existing = await api<Pagina<Consumo>>(`/v1/consumos?${new URLSearchParams({ unidade_id: unit, competencia: period, limite: '100' })}`);
         if (existing.proximo_cursor) throw new Error('Consulta incompleta: confira os registros antes de salvar.');
@@ -88,13 +91,15 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
       });
     }}><div className="grid">
       <label>Loja<select required value={unit} onChange={e => { setUnit(e.target.value); setRecords([]); setResult(null); setLoading(true); }}><option value="">Selecione</option>{units.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}</select></label>
-      <label>Competência<input type="month" required value={period} onChange={e => { setPeriod(e.target.value); setSources([]); setSource(''); setRecords([]); setResult(null); setLoading(true); }} /></label>
+      <label>Competência<input type="month" required value={period} onChange={e => { setPeriod(e.target.value); setCatalogLoading(Boolean(e.target.value)); setCatalogError(''); setSources([]); setSource(''); setRecords([]); setResult(null); setLoading(true); }} /></label>
       <label>Fonte<select required value={source} onChange={e => setSource(e.target.value)}><option value="">Selecione</option>{sources.map(f => <option key={f.fonte_id} value={f.fonte_id}>{f.nome}</option>)}</select></label>
       <label>Quantidade<input name="quantidade" inputMode="decimal" required aria-describedby="decimal-help" /></label>
       <label>Medida<select name="medida" key={source} required><option value="">Selecione</option>{sources.find(f => f.fonte_id === source)?.unidades_aceitas.map(m => <option key={m}>{m}</option>)}</select></label>
     </div><p id="decimal-help">Informe decimal sem separador de milhar. Zero explícito é válido.</p>
-    {period && !sources.length && <p>Nenhuma fonte carregada para esta competência. Confira a disponibilidade do catálogo.</p>}
-    <button className="btn" disabled={busy || !sources.length}>Salvar consumo</button></form></section>
+    {catalogLoading && <p role="status">◌ Carregando fontes…</p>}
+    {catalogError && <p role="alert">⚠ {catalogError} <button type="button" className="btn ghost" onClick={() => { setCatalogError(''); setCatalogLoading(true); setReload(r => r + 1); }}>Tentar carregar fontes novamente</button></p>}
+    {period && !catalogLoading && !catalogError && !sources.length && <p>Nenhuma fonte disponível para esta competência.</p>}
+    <button className="btn" disabled={busy || catalogLoading || Boolean(catalogError) || !sources.length}>Salvar consumo</button></form></section>
     <section className="card"><h2>Consumos salvos</h2><p>Os filtros de loja e competência acima também filtram esta consulta.</p>
       {!loading && !records.length && <p>Nenhum consumo encontrado.</p>}
       <ul>{records.map(c => <li key={c.id}><button className="btn ghost" disabled={busy} onClick={() => void action(() => show(c.id))}>{c.competencia} · {c.fonte_id} · {formatDecimal(c.emissao_kg_co2e, 3)} kgCO₂e</button></li>)}</ul>
