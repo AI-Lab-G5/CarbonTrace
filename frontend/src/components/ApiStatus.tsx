@@ -41,6 +41,8 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
           throw new Error(`Falha na resposta: HTTP ${response.status} ${response.statusText}`);
         }
         const data = (await response.json()) as HealthResponse;
+        const readiness = await fetch(`${apiBaseUrl}/readyz`, { signal: controller.signal });
+        if (!readiness.ok) throw new Error('API responde, mas o banco ainda não está pronto. Tente novamente.');
         if (!ignore) {
           const nextState: ApiStatusState = {
             state: 'success',
@@ -83,9 +85,9 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
       <div className="card-header-status">
         <h2 id="status-api-heading">Status da API Backend</h2>
         <span className={`badge badge-${status.state}`} aria-live="polite">
-          {status.state === 'loading' && 'Carregando'}
-          {status.state === 'success' && 'Online'}
-          {status.state === 'error' && 'Indisponível'}
+          {status.state === 'loading' && '◌ Carregando'}
+          {status.state === 'success' && 'Pronta'}
+          {status.state === 'error' && '⚠ Indisponível'}
         </span>
       </div>
 
