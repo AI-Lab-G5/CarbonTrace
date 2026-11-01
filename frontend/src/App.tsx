@@ -1,37 +1,25 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { onAuthStateChanged, signOut, type User } from 'firebase/auth';
+import { auth } from '@/auth';
 import { Topbar } from '@/components/Topbar';
-import { Hero } from '@/components/Hero';
-import { Calculadora } from '@/components/Calculadora';
-import { ApiStatus, type ApiStatusState } from '@/components/ApiStatus';
-import { ComoFunciona } from '@/components/ComoFunciona';
 import { Footer } from '@/components/Footer';
+import { ApiStatus } from '@/components/ApiStatus';
+import { Login } from '@/components/Login';
+import { Jornadas } from '@/components/Jornadas';
 import './App.css';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
-
 export default function App() {
-  const [apiState, setApiState] = useState<ApiStatusState>({ state: 'loading' });
-
-  return (
-    <div className="app-container">
-      <Topbar
-        apiStatusBadge={
-          <span className={`badge badge-${apiState.state}`} style={{ marginLeft: '0.5rem' }}>
-            {apiState.state === 'loading' && 'API: ...'}
-            {apiState.state === 'success' && 'API: Online'}
-            {apiState.state === 'error' && 'API: Off'}
-          </span>
-        }
-      />
-
-      <main>
-        <Hero />
-        <Calculadora />
-        <ApiStatus apiBaseUrl={API_BASE_URL} onStatusChange={setApiState} />
-        <ComoFunciona />
-      </main>
-
-      <Footer />
-    </div>
-  );
+  const [user, setUser] = useState<User | null>(null);
+  const [ready, setReady] = useState(false);
+  const [message, setMessage] = useState('');
+  useEffect(() => onAuthStateChanged(auth, next => { setUser(next); setReady(true); }), []);
+  const expired = useCallback(() => { setUser(null); setMessage('Sessão expirada. Entre novamente.'); void signOut(auth); }, []);
+  return <div className="app-container"><Topbar /><main>
+    {message && <p className="wrap" role="status">⚠ {message}</p>}
+    {!ready ? <p className="wrap" role="status">◌ Restaurando sessão…</p> : user ? <>
+      <div className="wrap"><p>{user.email}</p><button className="btn ghost" onClick={() => { void signOut(auth).then(() => { setUser(null); setMessage('Você saiu da aplicação.'); }).catch(() => setMessage('Não foi possível sair. Tente novamente.')); }}>Sair</button></div>
+      <Jornadas key={user.uid} user={user} expired={expired} />
+    </> : <Login />}
+    <ApiStatus />
+  </main><Footer /></div>;
 }

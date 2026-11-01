@@ -10,9 +10,8 @@ export function Topbar({ apiStatusBadge }: TopbarProps) {
           <img src="/logo.png" alt="CarbonTrace" className="logo-img" />
         </a>
         <nav className="topbar-nav" aria-label="Navegação principal">
-          <a href="#calculadora">Calculadora</a>
+          <a href="#jornadas">Unidades e coleta</a>
           <a href="#status-api">Status API</a>
-          <a href="#como-funciona">Como funciona</a>
           {apiStatusBadge}
         </nav>
       </div>
