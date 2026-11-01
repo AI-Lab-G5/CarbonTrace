@@ -41,3 +41,13 @@ test('catálogo distingue carregamento de vazio', async () => {
  await waitFor(() => expect(resolve).toBeDefined()); resolve([]);
  expect(await screen.findByText(/Nenhuma fonte disponível/)).toBeVisible();
 });
+
+test('mudar competência preserva páginas de lojas carregadas', async () => {
+ api.mockImplementation(async path => path.startsWith('/v1/unidades') ? {itens:[{id:'u',nome:'Loja',cidade:'X',uf:'DF'}],proximo_cursor:null} : path.startsWith('/v1/fontes') ? [] : empty);
+ render(<Jornadas user={user} expired={vi.fn()} />);
+ await screen.findByRole('option',{name:'Loja'});
+ const before=api.mock.calls.filter(c=>c[0].startsWith('/v1/unidades')).length;
+ fireEvent.change(screen.getByLabelText('Competência'),{target:{value:'2025-10'}});
+ await screen.findByText(/Nenhuma fonte disponível/);
+ expect(api.mock.calls.filter(c=>c[0].startsWith('/v1/unidades'))).toHaveLength(before);
+});

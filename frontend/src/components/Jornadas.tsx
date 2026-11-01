@@ -34,12 +34,16 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
   }
   useEffect(() => {
     const controller = new AbortController();
-    user.getIdToken().then(token => Promise.all([
-      request<Pagina<Unidade>>('/v1/unidades?limite=20', token, { signal: controller.signal }),
-      request<Pagina<Consumo>>(`/v1/consumos?${query}`, token, { signal: controller.signal }),
-    ])).then(([u, c]) => {
-      if (!controller.signal.aborted) { setUnits(u.itens); setCursor(u.proximo_cursor); setRecords(c.itens); setRecordCursor(c.proximo_cursor); }
-    }).catch(e => { if (!controller.signal.aborted) { setError(e.message); if (e.status === 401) expired(); } })
+    user.getIdToken().then(token => request<Pagina<Unidade>>('/v1/unidades?limite=20', token, { signal: controller.signal }))
+      .then(u => { if (!controller.signal.aborted) { setUnits(u.itens); setCursor(u.proximo_cursor); } })
+      .catch(e => { if (!controller.signal.aborted) { setError(e.message); if (e.status === 401) expired(); } });
+    return () => controller.abort();
+  }, [user, reload, expired]);
+  useEffect(() => {
+    const controller = new AbortController();
+    user.getIdToken().then(token => request<Pagina<Consumo>>(`/v1/consumos?${query}`, token, { signal: controller.signal }))
+      .then(c => { if (!controller.signal.aborted) { setRecords(c.itens); setRecordCursor(c.proximo_cursor); } })
+      .catch(e => { if (!controller.signal.aborted) { setError(e.message); if (e.status === 401) expired(); } })
       .finally(() => { if (!controller.signal.aborted) setLoading(false); });
     return () => controller.abort();
   }, [user, query, reload, expired]);
@@ -62,7 +66,7 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
     {loading && <p role="status">◌ Carregando registros…</p>}
     {busy && <p role="status">◌ Processando…</p>}
     {message && <p role="status">✓ {message}</p>}
-    {error && <div role="alert" className="error-box">⚠ {error} <button type="button" className="btn ghost" disabled={busy} onClick={() => { setError(''); setLoading(true); setReload(r => r + 1); }}>Consultar novamente</button></div>}
+    {error && <div id="journey-error" role="alert" className="error-box">⚠ {error} <button type="button" className="btn ghost" disabled={busy} onClick={() => { setError(''); setLoading(true); setReload(r => r + 1); }}>Consultar novamente</button></div>}
     <section className="card"><h2>Unidades da empresa</h2>
       {!loading && !units.length && <p>Nenhuma unidade encontrada. Cadastre sua primeira loja.</p>}
       <ul>{units.map(u => <li key={u.id}>{u.nome} — {u.cidade}/{u.uf} <button type="button" className="btn ghost" disabled={busy} onClick={() => void action(async () => { const detail = await api<Unidade>(`/v1/unidades/${encodeURIComponent(u.id)}`); setMessage(`${detail.nome} — ${detail.cidade}/${detail.uf}`); })}>Consultar loja</button></li>)}</ul>
@@ -93,7 +97,7 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
       <label>Loja<select required value={unit} onChange={e => { setUnit(e.target.value); setRecords([]); setResult(null); setLoading(true); }}><option value="">Selecione</option>{units.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}</select></label>
       <label>Competência<input type="month" required value={period} onChange={e => { setPeriod(e.target.value); setCatalogLoading(Boolean(e.target.value)); setCatalogError(''); setSources([]); setSource(''); setRecords([]); setResult(null); setLoading(true); }} /></label>
       <label>Fonte<select required value={source} onChange={e => setSource(e.target.value)}><option value="">Selecione</option>{sources.map(f => <option key={f.fonte_id} value={f.fonte_id}>{f.nome}</option>)}</select></label>
-      <label>Quantidade<input name="quantidade" inputMode="decimal" required aria-describedby="decimal-help" /></label>
+      <label>Quantidade<input name="quantidade" inputMode="decimal" required aria-describedby={error ? "decimal-help journey-error" : "decimal-help"} aria-invalid={Boolean(error)} /></label>
       <label>Medida<select name="medida" key={source} required><option value="">Selecione</option>{sources.find(f => f.fonte_id === source)?.unidades_aceitas.map(m => <option key={m}>{m}</option>)}</select></label>
     </div><p id="decimal-help">Informe decimal sem separador de milhar. Zero explícito é válido.</p>
     {catalogLoading && <p role="status">◌ Carregando fontes…</p>}
