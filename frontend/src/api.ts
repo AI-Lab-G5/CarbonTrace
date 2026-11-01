@@ -23,5 +23,6 @@ export async function request<T>(path: string, token: string, options: RequestIn
     const fallback: Record<number, string> = { 401: 'Sessão expirada. Entre novamente.', 403: 'Sua conta não tem acesso a esta operação.', 404: 'Registro não encontrado.', 409: 'Já existe um registro para estes dados.', 422: 'Confira os campos informados.' };
     throw new ApiError(response.status, response.status === 401 ? fallback[401] : detail || fallback[response.status] || `Serviço indisponível (HTTP ${response.status}). Tente novamente.`);
   }
+  if (data === null) throw new ApiError(502, 'A API retornou uma resposta inválida. Consulte novamente antes de reenviar dados.');
   return data as T;
 }

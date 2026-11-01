@@ -24,3 +24,8 @@ test('preserva cancelamento e não repete falha de rede', async () => {
  await expect(request('/v1/consumos','t',{method:'PUT'})).rejects.toThrow('consulte os registros');
  expect(fetcher).toHaveBeenCalledTimes(2);
 });
+
+test('não aceita HTML como resposta de sucesso da API', async () => {
+ vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('<html>proxy</html>')));
+ await expect(request('/v1/unidades','t')).rejects.toThrow('resposta inválida');
+});
