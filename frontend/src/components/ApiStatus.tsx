@@ -30,7 +30,7 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
     let ignore = false;
     const controller = new AbortController();
 
-    fetch(`${apiBaseUrl}/health`, {
+    fetch(`${apiBaseUrl}/healthz`, {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
@@ -93,7 +93,7 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
         <div className="status-box" role="status" aria-label="Consultando integridade do backend">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <span className="spinner" />
-            <p style={{ margin: 0 }}>Consultando integridade do backend (/api/health)...</p>
+            <p style={{ margin: 0 }}>Consultando integridade do backend (/api/healthz)...</p>
           </div>
         </div>
       )}
