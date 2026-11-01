@@ -56,7 +56,7 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
     setFactor(version.fatores.find(f => f.fonte_id === saved.fonte_id) || null);
   }
   return <div className="wrap" id="jornadas">
-    <h1>Unidades e coleta mensal</h1>
+    <h1>Unidades e coleta mensal</h1><fieldset disabled={busy} className="journey-fields"><legend className="nota">Cadastro, coleta e consulta</legend>
     {loading && <p role="status">◌ Carregando registros…</p>}
     {busy && <p role="status">◌ Processando…</p>}
     {message && <p role="status">✓ {message}</p>}
@@ -110,5 +110,5 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
     </dl><p>Estimativa limitada às fontes previstas. Fatores preliminares não representam inventário homologado. Autoria e datas ainda não são fornecidas pela API.</p>
       <button className="btn" disabled={busy} onClick={() => void action(async () => { const checked = await api<Consumo>(`/v1/consumos/${encodeURIComponent(result.id)}/recalculo`, { method: 'POST' }); setResult(checked); setMessage('Reprodução concluída pela API com o fator original.'); })}>Conferir cálculo original</button>
     </section>}
-  </div>;
+  </fieldset></div>;
 }
