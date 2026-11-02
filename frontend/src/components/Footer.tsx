@@ -17,7 +17,10 @@ export function Footer() {
               <figcaption>Universidade de Brasília</figcaption>
             </figure>
             <figure>
-              <div className="institution-logo-frame"><img src="/brand/ai-lab-unb.png" alt="Logo do AI Lab UnB" width="400" height="138" loading="lazy" decoding="async"/></div>
+              <div className="institution-logo-frame"><div className="ai-lab-logo">
+                <img src="/brand/ai-lab-unb.png" alt="Logo do AI Lab UnB" width="400" height="138" loading="lazy" decoding="async"/>
+                <img className="ai-lab-wordmark" src="/brand/ai-lab-unb.png" alt="" aria-hidden="true" width="400" height="138" loading="lazy" decoding="async"/>
+              </div></div>
               <figcaption>AI Lab UnB</figcaption>
             </figure>
           </div>
