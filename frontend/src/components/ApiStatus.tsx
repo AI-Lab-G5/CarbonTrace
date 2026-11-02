@@ -29,6 +29,7 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
   useEffect(() => {
     let ignore = false;
     const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
 
     fetch(`${apiBaseUrl}/healthz`, {
       signal: controller.signal,
@@ -56,7 +57,9 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
       .catch((err: unknown) => {
         if (ignore) return;
         const errorMessage =
-          err instanceof Error
+          controller.signal.aborted
+            ? 'A API demorou para responder. Tente novamente.'
+            : err instanceof Error
             ? err.message
             : 'Não foi possível estabelecer conexão com o backend.';
         const nextState: ApiStatusState = {
@@ -65,9 +68,10 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
         };
         setStatus(nextState);
         onStatusChangeRef.current?.(nextState);
-      });
+      }).finally(() => clearTimeout(timeout));
 
     return () => {
+      clearTimeout(timeout);
       ignore = true;
       controller.abort();
     };
