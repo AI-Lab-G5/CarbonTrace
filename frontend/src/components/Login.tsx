@@ -8,7 +8,6 @@ export function Login() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
-  const [show, setShow] = useState(false);
   const locked = useRef(false);
   const first = useRef<HTMLInputElement>(null);
   async function run(action: () => Promise<unknown>) {
@@ -18,7 +17,7 @@ export function Login() {
     finally { locked.current = false; setBusy(false); }
   }
   function change(next: typeof mode) {
-    setMode(next); setError(''); setMessage(''); setShow(false);
+    setMode(next); setError(''); setMessage('');
     requestAnimationFrame(() => first.current?.focus());
   }
   return <section className="wrap card auth-card"><h1>{mode === 'signup' ? 'Criar conta' : mode === 'reset' ? 'Recuperar acesso' : 'Entrar no CarbonTrace'}</h1>
@@ -46,12 +45,11 @@ export function Login() {
     }}><fieldset className="journey-fields" disabled={busy}><div className="grid">
       {mode === 'signup' && <label>Nome<input name="name" autoComplete="name" required maxLength={120} /></label>}
       <label>E-mail<input ref={first} name="email" type="email" autoComplete={mode === 'signup' ? 'email' : 'username'} required /></label>
-      {mode !== 'reset' && <><label>Senha<input name="password" type={show ? 'text' : 'password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required aria-describedby={mode === 'signup' ? 'password-help' : undefined} /></label>
-      {mode === 'signup' && <label>Confirmar senha<input name="confirmation" type={show ? 'text' : 'password'} autoComplete="new-password" required /></label>}</>}
+      {mode !== 'reset' && <><label>Senha<input name="password" type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required aria-describedby={mode === 'signup' ? 'password-help' : undefined} /></label>
+      {mode === 'signup' && <label>Confirmar senha<input name="confirmation" type="password" autoComplete="new-password" required /></label>}</>}
     </div>
     {mode === 'signup' && <p id="password-help" className="nota">Use ao menos 6 caracteres. A política da empresa pode exigir letras, números e símbolos adicionais.</p>}
-    <div className="auth-actions"><button className="btn">{busy ? '◌ Aguarde…' : mode === 'signup' ? 'Criar conta' : mode === 'reset' ? 'Enviar instruções' : 'Entrar'}</button>
-    {mode !== 'reset' && <button type="button" className="btn ghost" aria-pressed={show} onClick={() => setShow(!show)}>{show ? 'Ocultar senhas' : 'Mostrar senhas'}</button>}</div>
+    <div className="auth-actions"><button className="btn">{busy ? '◌ Aguarde…' : mode === 'signup' ? 'Criar conta' : mode === 'reset' ? 'Enviar instruções' : 'Entrar'}</button></div>
     </fieldset></form>
     <div className="auth-actions">
       <button className="btn ghost" disabled={busy} onClick={() => change(mode === 'login' ? 'signup' : 'login')}>{mode === 'login' ? 'Criar conta' : 'Voltar para entrar'}</button>

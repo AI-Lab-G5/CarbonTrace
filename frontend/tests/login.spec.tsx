@@ -150,24 +150,10 @@ describe('Componente Login', () => {
     });
   });
 
-  it('permite alternar visibilidade das senhas com botão acessível', async () => {
-    const user = userEvent.setup();
+  it('mantém os campos de senha sempre ocultos, sem botão de mostrar', () => {
     render(<Login />);
-
-    const campoSenha = screen.getByLabelText('Senha');
-    expect(campoSenha).toHaveAttribute('type', 'password');
-
-    const toggle = screen.getByRole('button', { name: 'Mostrar senhas' });
-    expect(toggle).toHaveAttribute('aria-pressed', 'false');
-
-    await user.click(toggle);
-    expect(campoSenha).toHaveAttribute('type', 'text');
-    expect(toggle).toHaveAttribute('aria-pressed', 'true');
-    expect(toggle).toHaveTextContent('Ocultar senhas');
-
-    await user.click(toggle);
-    expect(campoSenha).toHaveAttribute('type', 'password');
-    expect(toggle).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByLabelText('Senha')).toHaveAttribute('type', 'password');
+    expect(screen.queryByRole('button', { name: /mostrar senhas|ocultar senhas/i })).not.toBeInTheDocument();
   });
 
   it('solicita recuperação de senha e exibe mensagem que evita enumeração', async () => {
