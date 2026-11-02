@@ -27,11 +27,35 @@ services:
       retries: 12
       start_period: 60s
 
+  # Preenche o emulador com fatores, unidades de exemplo e as contas de
+  # demonstracao. Roda uma vez e termina (nao e servico de longa duracao).
+  # Sem ele, "docker compose up" sobe tudo verde mas nao existe usuario
+  # para logar -- e o CA-01 do CP2 exige o ambiente utilizavel sem passo
+  # manual depois do up.
+  seed:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: >
+      sh -c "python scripts/seed.py && python scripts/seed_contas.py"
+    environment:
+      FIRESTORE_EMULATOR_HOST: firebase-emulator:8080
+      FIREBASE_AUTH_EMULATOR_HOST: firebase-emulator:9099
+      FIREBASE_PROJECT_ID: demo-carbontrace
+      AUTH_MODE: emulator
+    volumes:
+      - ./backend:/app
+      - ./docs:/docs:ro
+    depends_on:
+      firebase-emulator:
+        condition: service_healthy
+    restart: "no"
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    env_file: 
+    env_file:
     - path: ./backend/.env
       required: false # make setup cria o .env; clone sem ele não trava o compose
     environment:
@@ -52,6 +76,10 @@ services:
     depends_on:
       firebase-emulator:
         condition: service_healthy
+      # O backend so sobe depois do seed, para o primeiro login ja
+      # encontrar as contas e as unidades no lugar.
+      seed:
+        condition: service_completed_successfully
 
   frontend:
     build:

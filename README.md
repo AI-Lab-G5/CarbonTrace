@@ -32,6 +32,35 @@ Acesse:
 - **Documentação da API:** [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Firebase Emulator Suite:** [http://localhost:4000](http://localhost:4000)
 
+#### Contas de demonstração
+
+O serviço `seed` roda uma vez a cada `up` e deixa o emulador pronto para uso:
+fatores, unidades de exemplo das duas empresas e **duas contas de login**. Sem
+ele o ambiente sobe, mas não existe usuário para entrar.
+
+| E-mail | Senha | Empresa |
+| --- | --- | --- |
+| `demo-a@carbontrace.local` | `carbontrace-demo` | empresa-a |
+| `demo-b@carbontrace.local` | `carbontrace-demo` | empresa-b |
+
+São dados sintéticos, restritos ao emulador: os dois scripts de seed recusam
+rodar sem `FIRESTORE_EMULATOR_HOST` / `FIREBASE_AUTH_EMULATOR_HOST`, então não
+há caminho para criar estas contas na nuvem. As duas empresas existem de
+propósito — com uma só, o isolamento entre tenants nunca seria exercitado.
+
+Para rodar os seeds isoladamente (com o emulador no ar):
+
+```bash
+cd backend
+FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 python scripts/seed.py
+FIREBASE_AUTH_EMULATOR_HOST=127.0.0.1:9099 python scripts/seed_contas.py
+
+
+```make
+# Roda os seeds no container do backend (exige o emulador no ar).
+seed:
+	docker compose run --rm seed
+
 O Nginx no container do frontend atua como proxy reverso para `/api/*`, encaminhando as requisições internamente para o serviço `backend:8000` sem problemas de CORS ou URLs hardcoded no cliente.
 
 ### Rodar Localmente em Desenvolvimento
