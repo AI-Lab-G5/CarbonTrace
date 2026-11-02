@@ -48,6 +48,7 @@ vi.mock('../src/components/ApiStatus', () => ({
 describe('App - Máquina de Estados da Sessão e Acesso', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState(null, '', '/entrar');
   });
 
   it('inicia na fase de restauração de sessão', () => {
@@ -172,5 +173,76 @@ describe('App - Máquina de Estados da Sessão e Acesso', () => {
       expect(signOut).toHaveBeenCalled();
       expect(screen.getByText(/Sessão expirada. Entre novamente./i)).toBeInTheDocument();
     });
+  });
+
+  it('preserva o destino protegido durante login e só libera após confirmar acesso', async () => {
+    window.history.replaceState(null, '', '/consumos');
+    let authChanged!: (u: User | null) => void;
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      authChanged = callback as (u: User | null) => void;
+      authChanged(null);
+      return () => {};
+    });
+    render(<App/>);
+    await screen.findByTestId('login-view');
+    expect(window.location.pathname).toBe('/entrar');
+    expect(screen.queryByTestId('jornadas-view')).not.toBeInTheDocument();
+    const fakeUser = { uid: 'direct', getIdTokenResult: vi.fn().mockResolvedValue({ token: 'token', claims: { tenant_id: 'a', papel: 'funcionario' } }) } as unknown as User;
+    vi.mocked(request).mockResolvedValueOnce({});
+    const { act } = await import('@testing-library/react');
+    await act(async () => authChanged(fakeUser));
+    await screen.findByTestId('jornadas-view');
+    expect(window.location.pathname).toBe('/consumos');
+  });
+
+  it('mostra recuperação para endereço desconhecido', async () => {
+    window.history.replaceState(null, '', '/inexistente');
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      (callback as (u: User | null) => void)(null);
+      return () => {};
+    });
+    render(<App/>);
+    expect(await screen.findByRole('heading', { name: 'Página não encontrada' })).toBeVisible();
+    expect(screen.getByRole('link', { name: 'Voltar ao início' })).toHaveAttribute('href', '/');
+  });
+
+  it('mantém a apresentação pública durante a restauração da sessão', () => {
+    window.history.replaceState(null, '', '/');
+    vi.mocked(onAuthStateChanged).mockImplementation(() => () => {});
+    render(<App/>);
+    expect(screen.getByRole('heading', { name: /Conheça o impacto/ })).toBeVisible();
+    expect(screen.queryByTestId('login-view')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('jornadas-view')).not.toBeInTheDocument();
+    expect(window.location.pathname).toBe('/');
+  });
+
+  it('apresenta equipe e oferece login separado na página inicial', async () => {
+    window.history.replaceState(null, '', '/');
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      (callback as (u: User | null) => void)(null);
+      return () => {};
+    });
+    const user = userEvent.setup();
+    render(<App/>);
+    expect(screen.getByRole('link', { name: 'Luís Davi no GitHub (abre em nova aba)' })).toHaveAttribute('href', 'https://github.com/pontesluis');
+    expect(screen.getByRole('link', { name: 'Heitor Monteiro no GitHub (abre em nova aba)' })).toHaveAttribute('href', 'https://github.com/heitormontt');
+    expect(screen.queryByTestId('login-view')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: /Entrar na conta/ }));
+    expect(await screen.findByTestId('login-view')).toBeVisible();
+    expect(window.location.pathname).toBe('/entrar');
+  });
+
+  it('preserva página pública se a conferência da sessão falhar', async () => {
+    window.history.replaceState(null, '', '/');
+    vi.mocked(request).mockRejectedValueOnce(new ApiError(503, 'Serviço indisponível'));
+    const fakeUser = { uid: 'home', getIdTokenResult: vi.fn().mockResolvedValue({ token: 'token', claims: { tenant_id: 'a', papel: 'funcionario' } }) } as unknown as User;
+    vi.mocked(onAuthStateChanged).mockImplementation((_auth, callback) => {
+      (callback as (u: User | null) => void)(fakeUser);
+      return () => {};
+    });
+    render(<App/>);
+    await waitFor(() => expect(request).toHaveBeenCalled());
+    expect(screen.getByRole('heading', { name: /Conheça o impacto/ })).toBeVisible();
+    expect(screen.queryByTestId('jornadas-view')).not.toBeInTheDocument();
   });
 });

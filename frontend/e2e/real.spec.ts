@@ -12,13 +12,15 @@ test.beforeAll(() => {
 });
 test('J1-J3 real: cadastro, consumo, recarga, fator original e logout', async ({page,request}) => {
  await page.goto('/');
+ await page.getByRole('navigation',{name:'Navegação principal'}).getByRole('link',{name:'Entrar',exact:true}).click();
  await page.getByLabel('E-mail').fill(emailA); await page.getByLabel('Senha').fill(password);
  await page.getByRole('button',{name:'Entrar',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Unidades e coleta mensal'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Unidades da empresa'})).toBeVisible();
  await page.getByLabel('Nome',{exact:true}).fill(`Loja ${suffix}`);
  await page.getByLabel('Cidade',{exact:true}).fill('Brasilia'); await page.getByLabel('UF',{exact:true}).fill('DF');
  await page.getByRole('button',{name:'Cadastrar',exact:true}).click();
  await expect(page.getByText('✓ Unidade cadastrada.')).toBeVisible();
+ await page.getByRole('listitem').filter({hasText:`Loja ${suffix}`}).getByRole('button',{name:'Registrar consumo →'}).click();
  await page.getByLabel('Loja',{exact:true}).selectOption({label:`Loja ${suffix}`}, {timeout:10000});
  await page.getByLabel('Competência',{exact:true}).fill('2025-10');
  await page.getByLabel('Fonte',{exact:true}).selectOption('eletricidade');
@@ -39,7 +41,8 @@ test('J1-J3 real: cadastro, consumo, recarga, fator original e logout', async ({
  await expect(page.getByRole('region',{name:'Resultado salvo'})).toContainText('38,500 kgCO₂e');
  await page.reload();
  await page.getByLabel('Loja',{exact:true}).selectOption({label:`Loja ${suffix}`}, {timeout:10000});
- await page.getByRole('button',{name:/2025-10 · eletricidade/}).click();
+ await page.getByRole('button',{name:/Eletricidade.*2025-10/}).click();
+ await page.getByText('Rastreabilidade do cálculo', {exact:false}).click();
  await expect(page.getByRole('region',{name:'Resultado salvo'})).toContainText('v1');
  await page.getByRole('button',{name:'Conferir cálculo original'}).click();
  await expect(page.getByText(/Reprodução concluída/)).toBeVisible();
@@ -54,7 +57,7 @@ test('J1-J3 real: cadastro, consumo, recarga, fator original e logout', async ({
  await page.getByRole('button',{name:'Sair',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Entrar no CarbonTrace'})).toBeVisible();
  await page.getByLabel('E-mail').fill(emailB); await page.getByLabel('Senha').fill(password); await page.getByRole('button',{name:'Entrar',exact:true}).click();
- await expect(page.getByRole('heading',{name:'Unidades e coleta mensal'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Coleta mensal'})).toBeVisible();
  await expect(page.getByText(`Loja ${suffix}`,{exact:true})).toHaveCount(0);
  const login=await request.post('http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo-carbontrace-key',{data:{email:emailB,password,returnSecureToken:true}});
  const {idToken}=await login.json();
@@ -67,7 +70,7 @@ test('API indisponível oferece recuperação real', async ({page,request}) => {
  const stop=spawnSync('docker',[...args,'stop','backend'],{cwd:'..',encoding:'utf8',timeout:30000});
  expect(stop.status).toBe(0);
  try {
-  await page.goto('/');
+  await page.goto('/entrar');
   await expect(page.getByText('⚠ Indisponível',{exact:true})).toBeVisible({timeout:15000});
   await expect(page.getByRole('button',{name:'Tentar novamente',exact:true})).toBeVisible();
  } finally {
