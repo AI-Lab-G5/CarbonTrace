@@ -70,3 +70,12 @@ consultados pela API após recarga. A documentação anterior de calculadora des
 a base histórica, não o fluxo integrado atual.
 
 Veja `docs/frontend/entrega-j1-j3.md` na raiz para validações e bloqueios.
+
+
+### Testes de componentes e ponta a ponta
+
+`npm test` executa testes decimais e Vitest/Testing Library. Para a integração real,
+suba o Compose com `compose.frontend-test.yml`, execute o seed e rode, em frontend,
+`npx playwright install chromium` e `npx playwright test`. O E2E cria contas sintéticas
+e para/reinicia somente o backend do projeto `carbontrace-front-test` em um cenário.
+As instruções completas e limites estão no relatório de entrega da raiz.

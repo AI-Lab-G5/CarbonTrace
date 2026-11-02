@@ -1,91 +1,146 @@
-# Entrega parcial de Frontend J1–J3
+# Frontend J1–J3: implementação e evidências
 
-Branch: `feat/front-integracao-j1-j3`. Referência de trabalho: 01/11/2026.
+Branch: `feat/front-integracao-j1-j3`. Esta revisão substitui o diagnóstico inicial
+que registrava Docker indisponível e ausência de E2E. O fluxo suportado pela API foi
+executado com Auth Emulator, Firestore Emulator e backend reais, sem mocks no E2E.
+O aceite integral das issues permanece dependente das lacunas de backend e da revisão da equipe.
 
-Implementados cliente HTTP Bearer, login/logout Firebase, listagem/cadastro/consulta
-de unidades, catálogo por competência, coleta decimal, consulta paginada, origem do
-resultado e reprodução pela API. O tema preto/verde e a estrutura React foram mantidos.
-Não há aceite integral nem prova ponta a ponta nesta entrega.
+## Resultado da validação
 
-## Verificações
+| Verificação | Resultado |
+|---|---|
+| `npm test` em frontend | 13 aprovados: 2 decimais + 11 Vitest |
+| `npm run lint` | Aprovado, sem warnings |
+| Build TypeScript/Vite e imagem Docker | Aprovados |
+| `npx playwright test` em frontend | 2 E2E aprovados, última execução 46 segundos |
+| `git diff --check` | Aprovado |
+| Healthcheck do frontend | healthy após correção de localhost para 127.0.0.1 |
+| Revisão visual | Login e jornada inspecionados em desktop e celular de 390 px; sem overflow horizontal |
+| CI remoto / revisão independente / aceite PO | Não executados ou concedidos nesta sessão |
 
-- `npm ci`: executado com sucesso.
-- `npm run build`: aprovado (TypeScript e Vite).
-- `npm run lint`: aprovado na primeira execução; repetir na revisão final.
-- `node --experimental-strip-types --test frontend/tests/decimal.test.ts`: 2 aprovados.
-- `git diff --check`: aprovado.
-- `docker info`: falhou por ausência de dockerDesktopLinuxEngine. Iniciar Docker Desktop
-  não disponibilizou o engine. Compose limpo, autenticação real, Rules, isolamento,
-  captura visual e E2E: **não executados**.
-- CI remoto, revisão independente e aceite PO: não comprovados.
-- npm reportou 16 vulnerabilidades (12 moderadas, 4 altas) após instalação; triagem
-  pendente, sem atualização forçada de versões.
+Vitest usa dublês para isolar componentes/HTTP. Playwright provisiona contas temporárias
+com senha aleatória em memória e autentica pela interface real. Tokens não são gravados
+em evidências. O ensaio usou o checkout de trabalho com build Docker, não foi repetido
+em clone limpo separado.
 
-Os testes novos verificam zero/ausência/inválidos e precisão/formatação. Não cobrem
-componentes, HTTP, Auth ou Firestore. A suíte histórica da calculadora está preservada,
-mas não faz parte do script principal nem comprova as novas jornadas.
+### Cenários comprovados
 
-## Issue #9
+- Login e logout individuais; cadastro e consulta das lojas da empresa.
+- Quantidade negativa recusada pela interface e pela API (422); registro salvo preservado.
+- 1 MWh em 2025-10: conversão para 1.000 kWh, fator preliminar v1 0.0385,
+  emissão JSON `38.500`, apresentada como **38,500 kgCO2e**.
+- Recarga recupera consumo pela API. Reprodução usa v1 mesmo com v2 no catálogo.
+- Troca para empresa B remove dados de A; GET do consumo de A com token de B retorna 404.
+- Backend interrompido no projeto de teste: mensagem de indisponibilidade; após reinício,
+  botão de nova tentativa recupera prontidão. O teste restaura o backend em finally.
+- Teclado no login, campos rotulados, estados de catálogo, erro 401, erro de campo 422,
+  resposta não JSON, cancelamento, falha de rede e ausência de retry automático de escrita.
+- Formatação decimal HALF_EVEN, zero explícito, rejeição de vazio/negativo/não finito.
 
-| CA | Entrega / evidência | Situação |
+## Capturas inspecionadas
+
+- [Login desktop](evidencias/login-desktop.png)
+- [Login celular](evidencias/login-mobile.png)
+- [Jornada desktop](evidencias/jornada-desktop.png)
+- [Jornada celular](evidencias/jornada-mobile.png)
+
+As capturas do login incluem API indisponível durante a preparação; as da jornada
+mostram resultado persistido e API pronta. Identidades/lojas são sintéticas. A revisão
+visual corrigiu o banner flutuante do SDK que cobria conteúdo no celular. A identificação
+de ambiente local passou para o formulário. Os selects receberam nomes acessíveis explícitos.
+
+## Rastreabilidade #9
+
+| CA | Evidência frontend | Limite do aceite |
 |---|---|---|
-| 01 | Login/logout e token SDK implementados; build aprovado | Parcial, Auth real não executado |
-| 02 | Cadastro/consulta paginada e catálogo integrados | Parcial; código único/vínculos ausentes no backend |
-| 03 | Payload textual, validações e dois testes decimais | Parcial; limites/API real sem prova |
-| 04 | Mensagens, loading, vazio, erro, retry e sucesso | Parcial; cobertura de componentes e catálogo loading a completar |
-| 05 | Labels, foco, fieldset e mensagens textuais | Parcial; conferência visual/teclado não executada |
-| 06 | Consulta inicial busca API após recarga | Parcial; persistência E2E não comprovada |
+| 01 | E2E login/logout com ID token real; teste 401 e teclado | Expiração real de token e matriz de autorização completa ficam com QA |
+| 02 | E2E cadastro/lista/consulta; catálogo por competência | Código único e fontes vinculadas por loja ausentes no backend |
+| 03 | Decimais testados; E2E negativo/422 sem alterar salvo | Tetos/faixa de datas requerem decisão TL/PO e fronteiras QA |
+| 04 | Componentes de loading/vazio/erro; E2E indisponibilidade e recuperação | Cobertura não é exaustiva de todas as falhas possíveis |
+| 05 | Labels, foco, teclado no login, revisão desktop/celular | Não constitui auditoria completa de acessibilidade |
+| 06 | E2E cadastro → gravação → consulta → recarga | Vínculo de fonte permanece pendente no contrato |
 
-## Issue #19
+## Rastreabilidade #19
 
-| CA | Entrega / evidência | Situação |
+| CA | Evidência frontend | Limite do aceite |
 |---|---|---|
-| 01 | Resultado salvo e versão explícita, metadados da versão original | Parcial; prova real pendente |
-| 02 | Fluxo conectado e leitura após montagem | Bloqueado para demonstração por Docker/ambiente |
-| 03 | Tratamento HTTP e healthz/readyz | Parcial; testes de indisponibilidade pendentes |
-| 04 | Decimal textual e HALF_EVEN testados; campos rotulados | Parcial; acessibilidade manual pendente |
-| 05 | Recálculo API por ID e versão original | Não validado com Backend/QA |
-| 06 | Este material técnico está preparado | Parcial; evidência integrada, revisão e entrega ao PO/QA pendentes |
+| 01 | E2E resultado, conversão, v1 e status preliminar | Autoria/datas não fornecidas pelo backend |
+| 02 | E2E com API/Auth/Firestore reais e recarga | Clone limpo separado não repetido; preparação explícita abaixo |
+| 03 | Testes de erro e dois E2E; healthz/readyz e timeout | Matriz formal fica com QA |
+| 04 | Decimal textual, HALF_EVEN de apresentação, labels e visual | Auditoria ampla de acessibilidade não executada |
+| 05 | 1.000 × 0.0385 = 38.500 conferido independentemente; recálculo com v1 | Conferência conjunta Backend/QA e decisão de precisão pendentes |
+| 06 | Este relatório, testes e capturas preparados para revisão | Envio, revisão independente e aceite PO não realizados |
 
-## Dependências e limites
+## Ambiente e reprodução
 
-Backend #11/#21: `POST /v1/unidades` aceita nome/cidade/uf, sem código único nem
-fontes por loja. Contrato esperado: código com 409 por duplicidade no tenant e vínculos
-persistidos. Exemplo proposto, não executado: `{ "codigo": "CENTRO", "nome": "Loja Centro" }`.
+Docker Desktop estava instalado em `%LOCALAPPDATA%/Programs/DockerDesktop`, diferente
+do caminho padrão tentado inicialmente. Iniciar esse executável disponibilizou o engine.
+Containers Supabase de outro projeto foram preservados. Projeto dedicado: `carbontrace-front-test`.
+O override fixa `--project demo-carbontrace` no emulador e GCLOUD_PROJECT/GOOGLE_CLOUD_PROJECT
+no backend, para resolver a configuração do Admin SDK sem mudar autenticação ou contrato.
 
-`PUT /v1/consumos` usa set e sobrescreve a chave loja/mês/fonte. A interface consulta
-antes e impede duplicata conhecida, mas não resolve concorrência. Backend precisa
-criação atômica/conflito 409. Autoria e datas também faltam no modelo de resposta.
-Nenhuma requisição de integração foi executada nesta sessão; estes achados são do código.
+Na raiz:
 
-DevOps #13/TL #18: alinhar projeto Auth/Firestore/backend/frontend em demo-carbontrace,
-preparar contas/catalogo reproduzíveis e fechar Rules. O navegador deve acessar Auth
-em 127.0.0.1:9099; nomes de serviço Docker são internos. Rules atuais permitem acessos
-incompatíveis com deny-all. QA #24 deve testar cada rota protegida com os quatro casos
-pedidos e acesso direto ao banco. Catálogo global exige enquadramento próprio do tenant.
+```powershell
+docker compose -p carbontrace-front-test -f docker-compose.yml -f compose.frontend-test.yml up --build -d
+docker compose -p carbontrace-front-test -f docker-compose.yml -f compose.frontend-test.yml exec -T backend python scripts/seed.py
+```
 
-TL/PO: confirmar tetos, faixa de competência e arredondamento por lançamento.
-A UI não refaz o motor nem fabrica metadados. Código/vínculos, proteção de concorrência,
-Rules e autoria continuam pendentes. Meta de 27 commits era sugestiva; etapas sem
-validação real não foram apresentadas como concluídas.
+O primeiro build baixa ferramentas e imagens. Se o healthcheck expirar durante a primeira
+preparação mas o emulador ficar saudável depois, repetir `up -d`. A carga de fatores
+é explícita; o seed atual pode substituir a mesma versão e é restrito ao ambiente de teste.
 
-## Reprodução e roteiro pendente
+Em frontend:
 
-1. Disponibilizar Docker Engine; subir Compose isolado com projeto Firebase alinhado.
-2. Preparar contas de duas empresas e catálogo pelo processo acordado com DevOps.
-3. No frontend: `npm ci`, `npm test`, `npm run lint`, `npm run build`, `npm run dev`.
-4. Entrar com funcionário A; cadastrar e consultar loja.
-5. Registrar eletricidade, 2025-10, quantidade textual 1, medida MWh.
-6. Conferir 1.000 kWh, fator preliminar v1 0.0385 e 38,500 kgCO2e.
-7. Recarregar, abrir resultado e conferir recálculo com v1 mesmo com v2 disponível.
-8. Testar entrada inválida sem gravação, indisponibilidade, logout e tentativa entre empresas.
+```powershell
+npm ci
+npm test
+npm run lint
+npm run build
+npx playwright install chromium
+npx playwright test
+```
 
-Variáveis em `frontend/.env.example` são resolvidas no build. O Compose padrão usa
-os defaults locais; customização exige fornecer variáveis ao build e reconstruir imagem.
+Playwright usa `http://127.0.0.1:3000`, provisiona contas somente no projeto de teste e
+interrompe/reinicia apenas seu backend no cenário de indisponibilidade. Mantém os dados
+sintéticos para inspeção. Para encerrar somente este ambiente, executar na raiz:
 
-## Commits
+```powershell
+docker compose -p carbontrace-front-test -f docker-compose.yml -f compose.frontend-test.yml down
+```
+
+## Pendências externas e riscos conhecidos
+
+- Backend #11/#21: código de negócio único, vínculo de fontes por loja, autoria/datas,
+  criação atômica com 409 e preservação do registro. A verificação preventiva do frontend
+  não elimina concorrência; não há tela de edição destrutiva ou histórico fictício.
+- DevOps/QA #13/#24: Rules deny-all e testes diretos completos. Rules permissivas não foram
+  alteradas. O 404 entre empresas comprovado no E2E não substitui quatro negações por rota.
+- TL/PO: tetos, faixa de competência e arredondamento por lançamento versus soma exata.
+- QA produz matriz/relatório formais; PO confere e aceita; revisão independente e CI remoto
+  continuam necessários. Nenhuma issue foi fechada nem houve push.
+- npm reportou 16 vulnerabilidades (12 moderadas, 4 altas); triagem de dependências pendente,
+  sem upgrades forçados nesta entrega. O relatório não certifica segurança global.
+
+Falhas intermediárias foram corrigidas/retestadas: espera por seletor no primeiro E2E,
+consulta inicial concorrente ao cadastro, ausência de timeout nas sondas e healthcheck
+IPv6. Os resultados aprovados acima são das execuções finais; falhas anteriores não
+foram contadas como sucesso.
+
+## Commits da implementação
 
 ```text
+4a3b980 fix(frontend): limitar espera das sondas da API
+f412972 fix(frontend): usar IPv4 no healthcheck do Nginx
+3f226b0 fix(frontend): explicitar nomes acessíveis dos seletores
+29c87ed fix(frontend): aguardar consulta inicial antes de cadastrar
+0389d0c fix(frontend): manter aviso local sem sobrepor formulário móvel
+0e82a4a fix(frontend): preservar lojas paginadas ao mudar competência
+02004e2 fix(frontend): rejeitar respostas inválidas de sucesso do proxy
+76a47ef chore(frontend): alinhar projeto Firebase no ambiente de integração
+3486857 test(frontend): cobrir transporte HTTP e jornadas com componentes
+c0eb955 fix(frontend): distinguir estados do catálogo e validar medidas
+32b3431 docs(frontend): registrar critérios parciais e bloqueios reais
 b6d1c48 docs(frontend): documentar configuração da integração local
 ff778fc ci(frontend): executar testes decimais junto do lint
 a1ee04e fix(frontend): impedir troca de contexto durante operações
