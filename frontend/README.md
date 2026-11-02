@@ -4,10 +4,13 @@ Interface web para estimativa, inventário e gestão de emissões de gases de ef
 
 ## Visão Geral
 
-O frontend organiza o inventário em duas áreas autenticadas: unidades da empresa e coleta mensal de consumos. Usa React, TypeScript e React Router, com a identidade escura e verde do CarbonTrace. O Nginx serve os arquivos estáticos e encaminha as chamadas da API.
+O frontend apresenta o CarbonTrace em uma página inicial pública e organiza o inventário em duas áreas autenticadas: unidades da empresa e coleta mensal de consumos. Usa React, TypeScript e React Router, com a identidade preta e verde do projeto. O Nginx serve os arquivos estáticos e encaminha as chamadas da API.
 
 ### Recursos da interface atual
 
+- **Página inicial pública:** frase de abertura, ilustração ambiental, apresentação do projeto, explicação das funções, equipe e card de acesso. Permanece acessível durante restauração ou falha da sessão.
+- **Equipe:** nomes, funções e avatares locais dos cinco integrantes, com links para os perfis do GitHub e iniciais como alternativa quando uma foto falhar.
+- **Acesso separado:** login e cadastro em tela própria; quem já está autorizado encontra o botão “Abrir meu painel” na página inicial.
 - **Navegação:** rotas de unidades e consumos, indicação da página ativa, histórico do navegador e acesso direto por URL.
 - **Acesso protegido:** restauração da sessão, login, verificação de vínculo à empresa e retorno à rota solicitada após concluir o acesso.
 - **Unidades:** cards com cidade/UF, cadastro, consulta e atalho para registrar consumo na loja selecionada.
@@ -39,14 +42,22 @@ Os componentes de calculadora didática e apresentação permanecem no repositó
 
 | Endereço | Tela / comportamento |
 | --- | --- |
-| `/` | Encaminha para a área correspondente ao estado da sessão |
+| `/` | Página inicial pública, inclusive para quem já está autenticado |
+| `/#sobre`, `/#como-funciona`, `/#equipe` | Seções da página inicial, também acessíveis pelo menu |
 | `/entrar` | Login, criação de conta e recuperação de acesso |
+| `/entrar?modo=cadastro` | Abre diretamente o formulário de criação de conta |
 | `/acesso` | Verificação de e-mail e vínculo por convite |
 | `/unidades` | Cadastro e consulta de lojas; exige acesso autorizado |
 | `/consumos` | Coleta, histórico e resultado; exige acesso autorizado |
 | Outros endereços | Página não encontrada com retorno ao início |
 
 O roteamento usa o [modo declarativo do React Router](https://reactrouter.com/start/declarative/routing). `App.tsx` mantém a máquina de estados da sessão e controla o acesso às rotas. `Jornadas.tsx` é o layout persistente das duas áreas autenticadas, com navegação e `Outlet`.
+
+`pages/HomePage.tsx` contém a apresentação pública. `pages/AuthPage.tsx` apresenta o formulário existente em um layout separado, mantendo login, Google, recuperação e vínculo por convite. A página inicial não consulta as sondas da API; o painel de conexão continua nas telas de acesso e trabalho.
+
+Os dados da equipe ficam em `src/data/team.ts`, com funções provenientes de `docs/planejamento-checkpoint-2.md`. Os nomes Luís Davi e Heitor Monteiro foram informados pela equipe; os demais nomes e os avatares vieram dos perfis públicos. As imagens ficam em `public/team/`, com origem registrada em `public/team/SOURCES.md`, sem consultas ao GitHub durante a navegação.
+
+`components/Reveal.tsx` usa IntersectionObserver para a entrada das seções, com conteúdo visível quando o recurso não estiver disponível. A preferência de movimento reduzido desativa os efeitos, e o visitante também pode pausar as animações da ilustração. O menu mobile permite fechar com Escape e retorna o foco ao botão.
 
 `hooks/useJornadas.ts` concentra as chamadas existentes à API e os estados compartilhados. `pages/UnidadesPage.tsx` e `pages/ConsumosPage.tsx` apresentam cada jornada. Os filtros e o rascunho de consumo permanecem ao trocar de rota; uma recarga inicia um formulário novo e consulta os dados persistidos pela API.
 
@@ -118,8 +129,8 @@ npx playwright install chromium
 npm run test:ui
 ```
 
-`playwright.ui.config.ts` inicia um Vite isolado na porta 3100 e executa `e2e/ui.spec.ts`, com respostas simuladas para Firebase Auth e API. Os cenários cobrem rota protegida e retorno após login, voltar/avançar, preservação do rascunho, recarga, logout, validação decimal, cadastro, consulta do fator original, falha de conexão, layout a 390 px e movimento reduzido. Capturas desktop/mobile ficam em `test-results/`.
+`playwright.ui.config.ts` inicia um Vite isolado na porta 3100 e executa `e2e/ui.spec.ts`, com respostas simuladas para Firebase Auth e API. Os cenários cobrem rota protegida e retorno após login, voltar/avançar, preservação do rascunho, recarga, logout, validação decimal, cadastro, consulta do fator original, falha de conexão, layout a 390 px e movimento reduzido. Também verificam página inicial sem API, fotos e links da equipe, pausa dos efeitos, navegação por seção, menu mobile, cadastro separado e alternativa para foto indisponível. Capturas desktop/mobile ficam em `test-results/`.
 
 O comando `npx playwright test` mantém a suíte `e2e/real.spec.ts`, que exige o ambiente Compose e exercita a integração real; as respostas simuladas não comprovam persistência ou isolamento no backend.
 
-Validação local em 02/11/2026: lint e build aprovados, 2 testes decimais e 40 testes de componentes/API aprovados, além de 3 cenários de navegador com serviços simulados. Capturas desktop e mobile foram inspecionadas. A suíte de integração real não foi executada nesta validação porque o Docker Engine estava indisponível.
+Validação local em 02/11/2026: lint e build aprovados, 2 testes decimais e 43 testes de componentes/API aprovados, além de 5 cenários de navegador com serviços simulados. Capturas desktop e mobile foram inspecionadas. O frontend Docker foi reconstruído, preservando backend e emuladores. Uma verificação adicional no navegador confirmou a página inicial, as cinco fotos, o login real da conta de demonstração, o acesso às lojas, o retorno à página pública autenticada e a recarga de Consumos, sem gravar consumos. A suíte completa `real.spec.ts` não foi repetida nesta alteração.
