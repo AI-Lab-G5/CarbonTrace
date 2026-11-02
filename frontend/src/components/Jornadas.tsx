@@ -62,7 +62,7 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
     setFactor(version.fatores.find(f => f.fonte_id === saved.fonte_id) || null);
   }
   return <div className="wrap" id="jornadas">
-    <h1>Unidades e coleta mensal</h1><fieldset disabled={busy} className="journey-fields"><legend className="nota">Cadastro, coleta e consulta</legend>
+    <h1>Unidades e coleta mensal</h1><fieldset disabled={busy || loading} className="journey-fields"><legend className="nota">Cadastro, coleta e consulta</legend>
     {loading && <p role="status">◌ Carregando registros…</p>}
     {busy && <p role="status">◌ Processando…</p>}
     {message && <p role="status">✓ {message}</p>}
