@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { GoogleAuthProvider, linkWithPopup, reload, sendEmailVerification, type User } from 'firebase/auth';
 import { request } from '@/api';
 import { authError } from '@/utils/authError';
+import { GoogleButton } from '@/components/GoogleButton';
 
 export function Onboarding({ user, refresh }: { user: User; refresh: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
@@ -36,9 +37,9 @@ export function LinkGoogle({ user }: { user: User }) {
   const [message, setMessage] = useState('');
   const lock = useRef(false);
   if (user.providerData.some(provider => provider.providerId === 'google.com')) return null;
-  return <><button className="google-button" disabled={busy} onClick={() => {
+  return <><GoogleButton disabled={busy} onClick={() => {
     if (lock.current) return;
     lock.current = true; setBusy(true); setMessage('');
     void linkWithPopup(user, new GoogleAuthProvider()).then(() => setMessage('✓ Google vinculado à sua conta.')).catch(err => setMessage(`⚠ ${authError(err)}`)).finally(() => { lock.current = false; setBusy(false); });
-  }}>Vincular Google</button>{message && <p role="status">{message}</p>}</>;
+  }}>Vincular Google</GoogleButton>{message && <p role="status">{message}</p>}</>;
 }

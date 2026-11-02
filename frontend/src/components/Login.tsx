@@ -3,6 +3,7 @@ import { createUserWithEmailAndPassword, GoogleAuthProvider, sendEmailVerificati
 import { auth, authMode } from '@/auth';
 import { authError } from '@/utils/authError';
 import { PasswordField } from '@/components/PasswordField';
+import { GoogleButton } from '@/components/GoogleButton';
 
 export function Login({ initialMode = 'login' }: { initialMode?: 'login' | 'signup' }) {
   const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(initialMode);
@@ -62,7 +63,7 @@ export function Login({ initialMode = 'login' }: { initialMode?: 'login' | 'sign
       <button className="btn ghost" disabled={busy} onClick={() => change(mode === 'login' ? 'signup' : 'login')}>{mode === 'login' ? 'Criar conta' : 'Voltar para entrar'}</button>
       {mode === 'login' && <button className="btn ghost" disabled={busy} onClick={() => change('reset')}>Esqueci minha senha</button>}
     </div>
-    {mode !== 'reset' && <button className="google-button" disabled={busy} onClick={() => { void run(() => signInWithPopup(auth, new GoogleAuthProvider())); }}>Entrar com Google</button>}
+    {mode !== 'reset' && <GoogleButton disabled={busy} onClick={() => { void run(() => signInWithPopup(auth, new GoogleAuthProvider())); }}>Entrar com Google</GoogleButton>}
     {error && <p role="alert" className="error-box">⚠ {error}</p>}
     {message && <p role="status">✓ {message}</p>}
   </section>;

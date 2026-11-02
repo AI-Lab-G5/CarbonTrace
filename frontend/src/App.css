@@ -407,5 +407,9 @@ dd { margin: .25rem 0 1rem; overflow-wrap: anywhere; }
 .auth-card { max-width: 760px; overflow-wrap: anywhere; }
 .auth-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-block: 1rem; }
 .auth-actions .ghost { margin-left: 0; }
-.google-button { background: #fff; color: #1f1f1f; border: 1px solid #747775; border-radius: 4px; padding: 10px 16px; font: 500 14px/20px Arial, sans-serif; cursor: pointer; min-height: 40px; }
+@font-face { font-family: 'Google Sans Button'; font-style: normal; font-weight: 500; font-display: swap; src: url('/brand/google-sans-500.ttf') format('truetype'); }
+.google-button { display: inline-flex; align-items: center; justify-content: center; gap: 10px; background: #131314; color: #e3e3e3; border: 1px solid #8e918f; border-radius: 999px; padding: 10px 12px; font: 500 14px/20px 'Google Sans Button', Arial, sans-serif; cursor: pointer; min-height: 44px; max-width: 100%; transition: background .18s ease, box-shadow .18s ease; }
+.google-button:hover:not(:disabled) { background: #232325; box-shadow: 0 0 0 2px #e3e3e314; }
+.google-button-icon { display: grid; place-items: center; width: 24px; height: 24px; flex-shrink: 0; background: #fff; border-radius: 50%; }
+.google-button-icon img { display: block; }
 @media (max-width: 400px) { .auth-card .grid { grid-template-columns: minmax(0, 1fr); } }
