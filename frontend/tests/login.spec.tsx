@@ -72,7 +72,7 @@ describe('Componente Login', () => {
     expect(screen.getByLabelText('Confirmar senha')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByLabelText('E-mail')).toHaveFocus();
+      expect(screen.getByLabelText('Nome')).toHaveFocus();
     });
   });
 
