@@ -3,8 +3,8 @@ import { createUserWithEmailAndPassword, GoogleAuthProvider, sendEmailVerificati
 import { auth, authMode } from '@/auth';
 import { authError } from '@/utils/authError';
 
-export function Login() {
-  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>('login');
+export function Login({ initialMode = 'login' }: { initialMode?: 'login' | 'signup' }) {
+  const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(initialMode);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);

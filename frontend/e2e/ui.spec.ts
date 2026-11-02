@@ -94,6 +94,12 @@ test('rotas protegidas, histórico, rascunho, cálculo e layout responsivo', asy
   await expect(page).toHaveURL(/\/consumos$/);
   await page.getByRole('button', { name: /Eletricidade.*2025-10/ }).click();
   await expect(page.getByRole('region', { name: 'Resultado salvo' })).toContainText('57,750');
+  await page.getByRole('link', { name: 'CarbonTrace — início' }).click();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { name: /Conheça o impacto/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Abrir menu' }).click();
+  await page.getByRole('navigation', { name: 'Navegação principal' }).getByRole('link', { name: /Abrir meu painel/ }).click();
+  await expect(page.getByRole('heading', { name: 'Unidades da empresa' })).toBeVisible();
   await page.getByRole('button', { name: 'Sair', exact: true }).click();
   await expect(page).toHaveURL(/\/entrar$/);
   await page.goto('/consumos');
@@ -130,4 +136,61 @@ test('falha de conexão abre detalhes e permite tentar novamente', async ({ page
   state.unavailable = false;
   await page.getByRole('button', { name: 'Tentar novamente', exact: true }).click();
   await expect(page.getByText('Pronta', { exact: true })).toBeVisible();
+});
+
+test('início público, fotos da equipe, efeitos, menu mobile e cadastro separado', async ({ page }, testInfo) => {
+  const apiRequests: string[] = [];
+  await page.route('**/api/**', async route => { apiRequests.push(route.request().url()); await route.abort(); });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: /Conheça o impacto/ })).toBeVisible();
+  await expect(page.getByLabel('E-mail')).toHaveCount(0);
+  await expect(page).toHaveURL(/\/$/);
+  await page.getByRole('button', { name: 'Pausar efeitos' }).click();
+  await expect(page.getByRole('button', { name: 'Retomar efeitos' })).toHaveAttribute('aria-pressed', 'true');
+  expect(await page.locator('.planet-sphere').evaluate(el => getComputedStyle(el).animationPlayState)).toBe('paused');
+  await page.getByRole('button', { name: 'Retomar efeitos' }).click();
+  await page.getByRole('link', { name: 'Equipe', exact: true }).click();
+  await expect(page).toHaveURL(/\/#equipe$/);
+  await expect(page.getByRole('heading', { name: /Pessoas por trás/ })).toBeInViewport();
+  for (const [name, login] of [['Thomas Augusto', 'Thomas4ugust0'], ['Luís Davi', 'pontesluis'], ['Heitor Monteiro', 'heitormontt'], ['Felipe C. Duque', 'felipecduque7'], ['Felipe Moreira', 'Bipelipe']]) {
+    const link = page.getByRole('link', { name: `${name} no GitHub (abre em nova aba)` });
+    await expect(link).toHaveAttribute('href', `https://github.com/${login}`);
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    await expect.poll(() => link.locator('img').evaluate(image => (image as HTMLImageElement).complete && (image as HTMLImageElement).naturalWidth > 0)).toBe(true);
+  }
+  expect(apiRequests).toEqual([]);
+  for (const reveal of await page.locator('.reveal').all()) {
+    await reveal.scrollIntoViewIfNeeded();
+    await expect(reveal).not.toHaveClass(/reveal-pending/);
+  }
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await page.screenshot({ path: testInfo.outputPath('inicio-desktop.png'), fullPage: true, animations: 'disabled' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Abrir menu' }).click();
+  await page.getByRole('link', { name: 'Como funciona', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Abrir menu' })).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByRole('heading', { name: /Um caminho simples/ })).toBeInViewport();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  expect(await page.locator('.planet-sphere').evaluate(el => getComputedStyle(el).animationName)).toBe('none');
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  await page.screenshot({ path: testInfo.outputPath('inicio-mobile.png'), fullPage: true, animations: 'disabled' });
+  await page.getByRole('link', { name: /Primeiro acesso/ }).click();
+  await expect(page).toHaveURL(/\/entrar\?modo=cadastro$/);
+  await expect(page.getByRole('heading', { name: 'Criar conta', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Nome', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Voltar para entrar' }).click();
+  await expect(page.getByRole('heading', { name: 'Entrar no CarbonTrace' })).toBeVisible();
+  await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+  await page.screenshot({ path: testInfo.outputPath('login-mobile.png'), fullPage: true, animations: 'disabled' });
+});
+
+test('perfil da equipe permanece acessível quando uma foto falha', async ({ page }) => {
+  await page.route('**/team/heitormontt.jpg', route => route.abort());
+  await page.goto('/#equipe');
+  const member = page.getByRole('link', { name: 'Heitor Monteiro no GitHub (abre em nova aba)' });
+  await member.scrollIntoViewIfNeeded();
+  await expect(member.locator('.team-initials')).toHaveText('HM');
+  await expect(member).toHaveAttribute('href', 'https://github.com/heitormontt');
 });

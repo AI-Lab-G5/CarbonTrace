@@ -12,6 +12,7 @@ test.beforeAll(() => {
 });
 test('J1-J3 real: cadastro, consumo, recarga, fator original e logout', async ({page,request}) => {
  await page.goto('/');
+ await page.getByRole('navigation',{name:'Navegação principal'}).getByRole('link',{name:'Entrar',exact:true}).click();
  await page.getByLabel('E-mail').fill(emailA); await page.getByLabel('Senha').fill(password);
  await page.getByRole('button',{name:'Entrar',exact:true}).click();
  await expect(page.getByRole('heading',{name:'Unidades da empresa'})).toBeVisible();
@@ -69,7 +70,7 @@ test('API indisponível oferece recuperação real', async ({page,request}) => {
  const stop=spawnSync('docker',[...args,'stop','backend'],{cwd:'..',encoding:'utf8',timeout:30000});
  expect(stop.status).toBe(0);
  try {
-  await page.goto('/');
+  await page.goto('/entrar');
   await expect(page.getByText('⚠ Indisponível',{exact:true})).toBeVisible({timeout:15000});
   await expect(page.getByRole('button',{name:'Tentar novamente',exact:true})).toBeVisible();
  } finally {
