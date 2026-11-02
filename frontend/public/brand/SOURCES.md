@@ -7,3 +7,10 @@ Versão escura com formato arredondado, cores e fonte baseadas nas [diretrizes o
 - `GoogleSans-OFL.txt`: licença SIL Open Font License, proveniente do [repositório Google Fonts](https://github.com/google/fonts/blob/main/ofl/googlesans/OFL.txt).
 
 Arquivos servidos localmente; não há requisições ao Google para carregar esses recursos durante a navegação.
+
+## Identidade da equipe
+
+- `unb.png`: logo da Universidade de Brasília, fornecida pela equipe em `unb-universidade-de-brasilia-logo.png`.
+- `ai-lab-unb.png`: logo do AI Lab UnB, fornecida pela equipe em `logo_lab-p2XjKUCz.png`.
+
+Arquivos originais preservados, com proporções mantidas por CSS. A apresentação em superfície clara permite a leitura das duas marcas no rodapé escuro. O texto identifica a origem da equipe e o contexto do projeto.
