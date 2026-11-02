@@ -94,11 +94,11 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
         await show(saved.id); setReload(r => r + 1); setMessage('Consumo salvo e consultado pela API.');
       });
     }}><div className="grid">
-      <label>Loja<select required value={unit} onChange={e => { setUnit(e.target.value); setRecords([]); setResult(null); setLoading(true); }}><option value="">Selecione</option>{units.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}</select></label>
+      <label>Loja<select aria-label="Loja" required value={unit} onChange={e => { setUnit(e.target.value); setRecords([]); setResult(null); setLoading(true); }}><option value="">Selecione</option>{units.map(u => <option key={u.id} value={u.id}>{u.nome}</option>)}</select></label>
       <label>Competência<input type="month" required value={period} onChange={e => { setPeriod(e.target.value); setCatalogLoading(Boolean(e.target.value)); setCatalogError(''); setSources([]); setSource(''); setRecords([]); setResult(null); setLoading(true); }} /></label>
-      <label>Fonte<select required value={source} onChange={e => setSource(e.target.value)}><option value="">Selecione</option>{sources.map(f => <option key={f.fonte_id} value={f.fonte_id}>{f.nome}</option>)}</select></label>
+      <label>Fonte<select aria-label="Fonte" required value={source} onChange={e => setSource(e.target.value)}><option value="">Selecione</option>{sources.map(f => <option key={f.fonte_id} value={f.fonte_id}>{f.nome}</option>)}</select></label>
       <label>Quantidade<input name="quantidade" inputMode="decimal" required aria-describedby={error ? "decimal-help journey-error" : "decimal-help"} aria-invalid={Boolean(error)} /></label>
-      <label>Medida<select name="medida" key={source} required><option value="">Selecione</option>{sources.find(f => f.fonte_id === source)?.unidades_aceitas.map(m => <option key={m}>{m}</option>)}</select></label>
+      <label>Medida<select aria-label="Medida" name="medida" key={source} required><option value="">Selecione</option>{sources.find(f => f.fonte_id === source)?.unidades_aceitas.map(m => <option key={m}>{m}</option>)}</select></label>
     </div><p id="decimal-help">Informe decimal sem separador de milhar. Zero explícito é válido.</p>
     {catalogLoading && <p role="status">◌ Carregando fontes…</p>}
     {catalogError && <p role="alert">⚠ {catalogError} <button type="button" className="btn ghost" onClick={() => { setCatalogError(''); setCatalogLoading(true); setReload(r => r + 1); }}>Tentar carregar fontes novamente</button></p>}
