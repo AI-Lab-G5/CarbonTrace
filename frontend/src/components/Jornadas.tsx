@@ -20,6 +20,7 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
   const [reload, setReload] = useState(0);
   const [recordCursor, setRecordCursor] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [unitsLoading, setUnitsLoading] = useState(true);
   const [catalogLoading, setCatalogLoading] = useState(false);
   const [catalogError, setCatalogError] = useState('');
   const query = new URLSearchParams({ limite: '20', ...(unit ? { unidade_id: unit } : {}), ...(period ? { competencia: period } : {}) }).toString();
@@ -36,7 +37,8 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
     const controller = new AbortController();
     user.getIdToken().then(token => request<Pagina<Unidade>>('/v1/unidades?limite=20', token, { signal: controller.signal }))
       .then(u => { if (!controller.signal.aborted) { setUnits(u.itens); setCursor(u.proximo_cursor); } })
-      .catch(e => { if (!controller.signal.aborted) { setError(e.message); if (e.status === 401) expired(); } });
+      .catch(e => { if (!controller.signal.aborted) { setError(e.message); if (e.status === 401) expired(); } })
+      .finally(() => { if (!controller.signal.aborted) setUnitsLoading(false); });
     return () => controller.abort();
   }, [user, reload, expired]);
   useEffect(() => {
@@ -66,9 +68,10 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
     {loading && <p role="status">◌ Carregando registros…</p>}
     {busy && <p role="status">◌ Processando…</p>}
     {message && <p role="status">✓ {message}</p>}
-    {error && <div id="journey-error" role="alert" className="error-box">⚠ {error} <button type="button" className="btn ghost" disabled={busy} onClick={() => { setError(''); setLoading(true); setReload(r => r + 1); }}>Consultar novamente</button></div>}
+    {error && <div id="journey-error" role="alert" className="error-box">⚠ {error} <button type="button" className="btn ghost" disabled={busy} onClick={() => { setError(''); setLoading(true); setUnitsLoading(true); setReload(r => r + 1); }}>Consultar novamente</button></div>}
     <section className="card"><h2>Unidades da empresa</h2>
-      {!loading && !units.length && <p>Nenhuma unidade encontrada. Cadastre sua primeira loja.</p>}
+      {unitsLoading && <p role="status">◌ Carregando unidades…</p>}
+      {!unitsLoading && !units.length && <p>Nenhuma unidade encontrada. Cadastre sua primeira loja.</p>}
       <ul>{units.map(u => <li key={u.id}>{u.nome} — {u.cidade}/{u.uf} <button type="button" className="btn ghost" disabled={busy} onClick={() => void action(async () => { const detail = await api<Unidade>(`/v1/unidades/${encodeURIComponent(u.id)}`); setMessage(`${detail.nome} — ${detail.cidade}/${detail.uf}`); })}>Consultar loja</button></li>)}</ul>
       {cursor && <button className="btn ghost" disabled={busy} onClick={() => void action(async () => { const page = await api<Pagina<Unidade>>(`/v1/unidades?limite=20&cursor=${encodeURIComponent(cursor)}`); setUnits(current => [...current, ...page.itens]); setCursor(page.proximo_cursor); })}>Mais unidades</button>}
       <form onSubmit={event => { event.preventDefault(); const form = event.currentTarget; const data = new FormData(form); void action(async () => {
