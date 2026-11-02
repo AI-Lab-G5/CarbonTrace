@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, updateProfile, validatePassword } from 'firebase/auth';
 import { auth, authMode } from '@/auth';
 import { authError } from '@/utils/authError';
@@ -10,6 +10,13 @@ export function Login() {
   const [busy, setBusy] = useState(false);
   const locked = useRef(false);
   const first = useRef<HTMLInputElement>(null);
+  const previousMode = useRef(mode);
+  useEffect(() => {
+    if (previousMode.current !== mode) {
+      first.current?.focus();
+      previousMode.current = mode;
+    }
+  }, [mode]);
   async function run(action: () => Promise<unknown>) {
     if (locked.current) return;
     locked.current = true; setBusy(true); setError(''); setMessage('');
@@ -18,7 +25,6 @@ export function Login() {
   }
   function change(next: typeof mode) {
     setMode(next); setError(''); setMessage('');
-    requestAnimationFrame(() => first.current?.focus());
   }
   return <section className="wrap card auth-card"><h1>{mode === 'signup' ? 'Criar conta' : mode === 'reset' ? 'Recuperar acesso' : 'Entrar no CarbonTrace'}</h1>
     <p>Use sua conta individual. O acesso às lojas depende de um convite da sua empresa.</p>
@@ -43,8 +49,8 @@ export function Login() {
         await sendEmailVerification(result.user);
       });
     }}><fieldset className="journey-fields" disabled={busy}><div className="grid">
-      {mode === 'signup' && <label>Nome<input name="name" autoComplete="name" required maxLength={120} /></label>}
-      <label>E-mail<input ref={first} name="email" type="email" autoComplete={mode === 'signup' ? 'email' : 'username'} required /></label>
+      {mode === 'signup' && <label>Nome<input ref={first} name="name" autoComplete="name" required maxLength={120} /></label>}
+      <label>E-mail<input ref={mode === 'signup' ? undefined : first} name="email" type="email" autoComplete={mode === 'signup' ? 'email' : 'username'} required /></label>
       {mode !== 'reset' && <><label>Senha<input name="password" type="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required aria-describedby={mode === 'signup' ? 'password-help' : undefined} /></label>
       {mode === 'signup' && <label>Confirmar senha<input name="confirmation" type="password" autoComplete="new-password" required /></label>}</>}
     </div>

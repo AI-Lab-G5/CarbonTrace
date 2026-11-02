@@ -30,7 +30,7 @@ vi.mock('firebase/auth', () => {
 
 describe('Componente Login', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    vi.resetAllMocks();
     vi.mocked(validatePassword).mockResolvedValue({ isValid: true } as unknown as { isValid: boolean });
   });
 
@@ -72,8 +72,24 @@ describe('Componente Login', () => {
     expect(screen.getByLabelText('Confirmar senha')).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(screen.getByLabelText('E-mail')).toHaveFocus();
+      expect(screen.getByLabelText('Nome')).toHaveFocus();
     });
+
+    await user.keyboard('Ana Silva');
+    expect(screen.getByLabelText('Nome')).toHaveValue('Ana Silva');
+    await user.tab();
+    expect(screen.getByLabelText('E-mail')).toHaveFocus();
+    await user.keyboard('ana@empresa.com');
+    expect(screen.getByLabelText('E-mail')).toHaveValue('ana@empresa.com');
+
+    await user.click(screen.getByRole('button', { name: 'Voltar para entrar' }));
+    expect(screen.getByLabelText('E-mail')).toHaveFocus();
+    expect(screen.getByLabelText('E-mail')).toHaveValue('');
+
+    await user.click(screen.getByRole('button', { name: 'Esqueci minha senha' }));
+    expect(screen.getByLabelText('E-mail')).toHaveFocus();
+    await user.keyboard('ana@empresa.com');
+    expect(screen.getByLabelText('E-mail')).toHaveValue('ana@empresa.com');
   });
 
   it('recusa cadastro se o nome estiver em branco', async () => {
