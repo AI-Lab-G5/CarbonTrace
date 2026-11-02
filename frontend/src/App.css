@@ -397,6 +397,13 @@ dd { margin: .25rem 0 1rem; overflow-wrap: anywhere; }
 
 .journey-fields { border: 0; margin: 0; padding: 0; min-width: 0; }
 
+.password-field { display: flex; flex-direction: column; gap: .4rem; min-width: 0; }
+.password-input { position: relative; min-width: 0; }
+.password-input input { padding-right: 3.25rem; }
+.password-toggle { position: absolute; right: .2rem; top: 0; bottom: 0; margin-block: auto; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.password-toggle:hover { color: var(--accent); }
+.password-input input::-ms-reveal { display: none; }
+
 .auth-card { max-width: 760px; overflow-wrap: anywhere; }
 .auth-actions { display: flex; gap: .75rem; flex-wrap: wrap; margin-block: 1rem; }
 .auth-actions .ghost { margin-left: 0; }

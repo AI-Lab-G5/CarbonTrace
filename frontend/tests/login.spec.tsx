@@ -46,6 +46,8 @@ describe('Componente Login', () => {
     expect(screen.getByLabelText('Senha')).toHaveFocus();
     await user.keyboard('senha-temporaria');
     await user.tab();
+    expect(screen.getByRole('button', { name: 'Mostrar senha', exact: true })).toHaveFocus();
+    await user.tab();
     expect(screen.getByRole('button', { name: 'Entrar' })).toHaveFocus();
     await user.keyboard('{Enter}');
 
@@ -173,13 +175,17 @@ describe('Componente Login', () => {
     const campoSenha = screen.getByLabelText('Senha');
     expect(campoSenha).toHaveAttribute('type', 'password');
 
-    const toggle = screen.getByRole('button', { name: 'Mostrar senhas' });
+    await user.type(campoSenha, 'Senha de exemplo');
+    const toggle = screen.getByRole('button', { name: 'Mostrar senha', exact: true });
     expect(toggle).toHaveAttribute('aria-pressed', 'false');
 
     await user.click(toggle);
     expect(campoSenha).toHaveAttribute('type', 'text');
     expect(toggle).toHaveAttribute('aria-pressed', 'true');
-    expect(toggle).toHaveTextContent('Ocultar senhas');
+    expect(toggle).toHaveAccessibleName('Ocultar senha');
+    expect(toggle).toHaveTextContent('');
+    expect(campoSenha).toHaveValue('Senha de exemplo');
+    expect(signInWithEmailAndPassword).not.toHaveBeenCalled();
 
     await user.click(toggle);
     expect(campoSenha).toHaveAttribute('type', 'password');

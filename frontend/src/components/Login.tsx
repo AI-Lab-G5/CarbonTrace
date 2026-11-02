@@ -2,13 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, sendEmailVerification, sendPasswordResetEmail, signInWithEmailAndPassword, signInWithPopup, updateProfile, validatePassword } from 'firebase/auth';
 import { auth, authMode } from '@/auth';
 import { authError } from '@/utils/authError';
+import { PasswordField } from '@/components/PasswordField';
 
 export function Login({ initialMode = 'login' }: { initialMode?: 'login' | 'signup' }) {
   const [mode, setMode] = useState<'login' | 'signup' | 'reset'>(initialMode);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
-  const [show, setShow] = useState(false);
   const locked = useRef(false);
   const first = useRef<HTMLInputElement>(null);
   const previousMode = useRef(mode);
@@ -25,7 +25,7 @@ export function Login({ initialMode = 'login' }: { initialMode?: 'login' | 'sign
     finally { locked.current = false; setBusy(false); }
   }
   function change(next: typeof mode) {
-    setMode(next); setError(''); setMessage(''); setShow(false);
+    setMode(next); setError(''); setMessage('');
   }
   return <section className="wrap card auth-card"><h1>{mode === 'signup' ? 'Criar conta' : mode === 'reset' ? 'Recuperar acesso' : 'Entrar no CarbonTrace'}</h1>
     <p>Use sua conta individual. O acesso às lojas depende de um convite da sua empresa.</p>
@@ -52,12 +52,11 @@ export function Login({ initialMode = 'login' }: { initialMode?: 'login' | 'sign
     }}><fieldset className="journey-fields" disabled={busy}><div className="grid">
       {mode === 'signup' && <label>Nome<input ref={first} name="name" autoComplete="name" required maxLength={120} /></label>}
       <label>E-mail<input ref={mode === 'signup' ? undefined : first} name="email" type="email" autoComplete={mode === 'signup' ? 'email' : 'username'} required /></label>
-      {mode !== 'reset' && <><label>Senha<input name="password" type={show ? 'text' : 'password'} autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required aria-describedby={mode === 'signup' ? 'password-help' : undefined} /></label>
-      {mode === 'signup' && <label>Confirmar senha<input name="confirmation" type={show ? 'text' : 'password'} autoComplete="new-password" required /></label>}</>}
+      {mode !== 'reset' && <PasswordField label="Senha" name="password" autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} describedBy={mode === 'signup' ? 'password-help' : undefined}/>}
+      {mode === 'signup' && <PasswordField label="Confirmar senha" name="confirmation" autoComplete="new-password"/>}
     </div>
     {mode === 'signup' && <p id="password-help" className="nota">Use ao menos 6 caracteres. A política da empresa pode exigir letras, números e símbolos adicionais.</p>}
-    <div className="auth-actions"><button className="btn">{busy ? '◌ Aguarde…' : mode === 'signup' ? 'Criar conta' : mode === 'reset' ? 'Enviar instruções' : 'Entrar'}</button>
-    {mode !== 'reset' && <button type="button" className="btn ghost" aria-pressed={show} onClick={() => setShow(!show)}>{show ? 'Ocultar senhas' : 'Mostrar senhas'}</button>}</div>
+    <div className="auth-actions"><button className="btn">{busy ? '◌ Aguarde…' : mode === 'signup' ? 'Criar conta' : mode === 'reset' ? 'Enviar instruções' : 'Entrar'}</button></div>
     </fieldset></form>
     <div className="auth-actions">
       <button className="btn ghost" disabled={busy} onClick={() => change(mode === 'login' ? 'signup' : 'login')}>{mode === 'login' ? 'Criar conta' : 'Voltar para entrar'}</button>
