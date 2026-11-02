@@ -85,15 +85,15 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
   };
 
   return (
-    <section id="status-api" className="wrap card" aria-labelledby="status-api-heading">
-      <div className="card-header-status">
-        <h2 id="status-api-heading">Status da API Backend</h2>
+    <details id="status-api" className="wrap card api-status-panel" open={status.state === 'error' || undefined}>
+      <summary className="card-header-status">
+        <h2>Conexão com a plataforma</h2>
         <span className={`badge badge-${status.state}`} aria-live="polite">
           {status.state === 'loading' && '◌ Carregando'}
           {status.state === 'success' && 'Pronta'}
           {status.state === 'error' && '⚠ Indisponível'}
         </span>
-      </div>
+      </summary>
 
       {status.state === 'loading' && (
         <div className="status-box" role="status" aria-label="Consultando integridade do backend">
@@ -149,6 +149,6 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
           </button>
         </div>
       )}
-    </section>
+    </details>
   );
 }

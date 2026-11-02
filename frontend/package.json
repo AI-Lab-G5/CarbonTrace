@@ -8,12 +8,14 @@
     "build": "tsc -b && vite build",
     "lint": "eslint . --max-warnings 0",
     "test": "node --experimental-strip-types --test tests/decimal.test.ts && vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:ui": "playwright test --config playwright.ui.config.ts"
   },
   "dependencies": {
     "firebase": "^13.1.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "react-router": "^8.5.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
