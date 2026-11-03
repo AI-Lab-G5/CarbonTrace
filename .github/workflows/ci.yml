@@ -106,7 +106,7 @@ jobs:
         run: npm run build
         working-directory: frontend
 
-    deny-all:
+  deny-all:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
