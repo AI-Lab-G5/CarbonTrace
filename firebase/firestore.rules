@@ -2,48 +2,35 @@ rules_version = '2';
 
 // Regras de seguranca do Firestore -- CarbonTrace.
 //
-// O acesso ao Firestore passa pela API, que ja valida identidade e
-// tenant. Estas regras sao a segunda barreira, para o caso de alguem
-// chamar o Firestore direto do navegador -- e a unica que continua de pe
-// se a API tiver um defeito de autorizacao.
+// DENY-ALL. Nenhum cliente le ou escreve nada diretamente.
 //
-// Atualizado no CP2: a colecao de dados passou de 'registros' para
-// 'consumos' e o unico papel do sistema e 'funcionario' (ver
-// docs/planejamento-checkpoint-2.md). Quem valida estas regras contra o
-// emulador e o QA, na issue #24.
+// Por que deny-all e nao "cada tenant acessa o seu":
+//
+// Todo acesso do produto passa pela API, que valida o ID token, resolve
+// o tenant pela custom claim e responde por rota propria. O frontend
+// nao abre conexao com o Firestore em lugar nenhum -- so com o Auth,
+// que nao passa por estas regras.
+//
+// Com o cliente fora do caminho, permitir leitura direta do tenant nao
+// compra nada e custa caro: cria uma segunda superficie de autorizacao,
+// com regra propria, que precisaria ser mantida em paralelo a API para
+// sempre. Duas fontes de verdade sobre permissao e como se descobre um
+// vazamento em producao.
+//
+// A API continua funcionando: o Admin SDK ignora Security Rules por
+// definicao. Estas regras valem so para acesso de cliente.
+//
+// Provado por qa/test_deny_all.py (CA-03 do #13, CA-04 do #24):
+// anonimo e usuario autenticado recebem 403 em leitura e escrita, e o
+// Admin SDK continua lendo e gravando.
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Fatores de emissao: publicos para leitura, nunca gravados pelo cliente.
-    // Publicar versao nova e operacao administrativa, feita fora do app.
-    match /fatores/{versao} {
-      allow read: if true;
-      allow write: if false;
-    }
-
-    // Dados de cliente. O tenant vem da custom claim do token, assinada pelo
-    // Firebase -- o cliente nao consegue forjar a sua. Nenhuma regra aqui
-    // confia em campo enviado no pedido.
-    match /tenants/{tenantId}/{documento=**} {
-      allow read: if pertenceAoTenant(tenantId);
-      allow write: if pertenceAoTenant(tenantId) && podeEscrever();
-    }
-
-    // Qualquer caminho nao previsto acima e negado.
+    // Nenhuma excecao. Nem fatores, nem tenants, nem colecao nova que
+    // alguem crie amanha sem pensar nas regras.
     match /{documento=**} {
       allow read, write: if false;
-    }
-
-    function pertenceAoTenant(tenantId) {
-      return request.auth != null
-          && request.auth.token.tenant_id == tenantId;
-    }
-
-    // Um unico papel no CP2. Os antigos 'operador' e 'gestor' saíram
-    // junto com a gestao de usuarios, que ficou fora do recorte.
-    function podeEscrever() {
-      return request.auth.token.papel == 'funcionario';
     }
   }
 }

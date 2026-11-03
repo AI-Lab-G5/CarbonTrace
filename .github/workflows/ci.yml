@@ -3,8 +3,13 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    # `dev` entrou em 02/11: merge de PR para dentro dela nao dispara
+    # `pull_request` (o PR ja foi fechado) e antes tambem nao era push
+    # para a main. O PR #27 entrou na dev sem nenhum check rodar.
+    branches: [main, dev]
   pull_request:
+  # Rodada manual, para reexecutar sem precisar de commit novo.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -100,3 +105,68 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: frontend
+
+  deny-all:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Java (exigido pelo emulador do Firestore)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Instala dependencias do backend
+        run: pip install -r backend/requirements.txt
+
+      - name: Instala Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Sobe Auth e Firestore Emulator
+        run: |
+          # Sai do diretorio raiz porque firebase.json e as rules vivem em
+          # firebase/. O `cd` fica dentro do passo: `working-directory`
+          # mudaria o cwd so deste passo, mas o processo em background
+          # precisa continuar rodando depois que o passo termina.
+          cd firebase
+          firebase emulators:start --only auth,firestore --project demo-carbontrace &
+          # Espera as portas 8080 (Firestore) e 9099 (Auth) responderem.
+          # "processo iniciado" nao e o mesmo que "pronto para responder",
+          # e um sleep fixo erra tanto para mais quanto para menos.
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/ > /dev/null 2>&1 \
+               && curl -fsS http://127.0.0.1:9099/ > /dev/null 2>&1; then
+              echo "Emuladores prontos apos ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Emuladores nao subiram em 60s"
+          exit 1
+
+      - name: Cria contas de demonstracao
+        run: python backend/scripts/seed_contas.py
+        env:
+          FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
+          FIREBASE_PROJECT_ID: demo-carbontrace
+
+      - name: Semeia fatores e unidades
+        run: python backend/scripts/seed.py
+        env:
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+          FIREBASE_PROJECT_ID: demo-carbontrace
+
+      - name: Prova deny-all das Security Rules
+        run: pytest qa/test_deny_all.py -v
+        env:
+          FIREBASE_EMULATOR_HOST: 127.0.0.1:8080
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+          FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
+          FIREBASE_PROJECT_ID: demo-carbontrace
