@@ -43,12 +43,14 @@ CONTAS_DEMO = [
     },
 ]
 
+PROJETO = os.environ.get("FIREBASE_PROJECT_ID", "demo-carbontrace")
+
 
 def _garantir_app() -> None:
     import firebase_admin
 
     if not firebase_admin._apps:
-        firebase_admin.initialize_app()
+        firebase_admin.initialize_app(options={"projectId": PROJETO})
 
 
 def criar_ou_atualizar_conta(conta: dict) -> str:
@@ -91,6 +93,7 @@ def main() -> int:
         return 1
 
     os.environ.setdefault("FIREBASE_PROJECT_ID", "demo-carbontrace")
+    os.environ.setdefault("GOOGLE_CLOUD_PROJECT", os.environ["FIREBASE_PROJECT_ID"])
     _garantir_app()
 
     for conta in CONTAS_DEMO:
