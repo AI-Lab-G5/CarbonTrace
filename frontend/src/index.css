@@ -10,6 +10,14 @@
   --muted: #9ca3af;
   --accent: #00e599;
   --accent-dark: #00b377;
+  --accent-hover: #33ecad;
+  --control-border: #626f66;
+  --control-border-hover: #84968b;
+  --text-support: #9eafa4;
+  --text-caption: #8d9b92;
+  --border-soft: #243329;
+  --surface-selected: #0b2119;
+  --border-selected: #174d3b;
   --radius: 14px;
 
   /* Estados de API e feedback */
@@ -31,6 +39,8 @@
 html {
   scroll-behavior: smooth;
   background-color: #000000;
+  scrollbar-color: #465149 var(--bg-soft);
+  scrollbar-gutter: stable;
 }
 
 body {
@@ -42,6 +52,10 @@ body {
   line-height: 1.55;
   min-height: 100vh;
 }
+
+::selection { background: var(--accent); color: var(--bg); }
+input, select, textarea { accent-color: var(--accent); caret-color: var(--accent); }
+a { text-underline-offset: .2em; }
 
 .wrap {
   width: min(1040px, 92vw);

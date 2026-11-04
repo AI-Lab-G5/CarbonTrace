@@ -3,6 +3,7 @@ import { GoogleAuthProvider, linkWithPopup, reload, sendEmailVerification, type 
 import { request } from '@/api';
 import { authError } from '@/utils/authError';
 import { GoogleButton } from '@/components/GoogleButton';
+import { FormFeedback } from '@/components/FormFeedback';
 
 export function Onboarding({ user, refresh }: { user: User; refresh: () => Promise<void> }) {
   const [busy, setBusy] = useState(false);
@@ -28,7 +29,7 @@ export function Onboarding({ user, refresh }: { user: User; refresh: () => Promi
       <p className="nota">Sem convite? Solicite à equipe responsável pela sua empresa.</p>
     </>}
     <div className="auth-actions"><button className="btn ghost" disabled={busy} onClick={() => { void run(async () => { await reload(user); await refresh(); setMessage('Situação atualizada.'); }); }}>Já verifiquei / Atualizar acesso</button></div>
-    {busy && <p role="status">◌ Conferindo acesso…</p>}{message && <p role="status">✓ {message}</p>}{error && <p className="error-box" role="alert">⚠ {error}</p>}
+    {busy && <p role="status">Conferindo acesso…</p>}{message && <p role="status">✓ {message}</p>}<FormFeedback message={error} focus/>
   </section>;
 }
 

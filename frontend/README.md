@@ -59,7 +59,11 @@ Os dados da equipe ficam em `src/data/team.ts`, com funções provenientes de `d
 
 `components/Reveal.tsx` usa IntersectionObserver para a entrada das seções, com conteúdo visível quando o recurso não estiver disponível. A preferência de movimento reduzido desativa os efeitos, e o visitante também pode pausar as animações da ilustração. O menu mobile permite fechar com Escape e retorna o foco ao botão.
 
-`hooks/useJornadas.ts` concentra as chamadas existentes à API e os estados compartilhados. `pages/UnidadesPage.tsx` e `pages/ConsumosPage.tsx` apresentam cada jornada. Os filtros e o rascunho de consumo permanecem ao trocar de rota; uma recarga inicia um formulário novo e consulta os dados persistidos pela API.
+`hooks/useJornadas.ts` concentra as chamadas existentes à API e os estados compartilhados. `pages/UnidadesPage.tsx` e `pages/ConsumosPage.tsx` apresentam cada jornada. Os filtros, o rascunho de consumo e o cadastro de unidade permanecem ao trocar de rota. Rascunhos são recuperados após recarregar a mesma aba, usando `sessionStorage` separado por usuário; são removidos ao salvar, sair ou expirar a sessão. Senhas e convites não são armazenados. Se o navegador bloquear o armazenamento, o preenchimento continua funcionando em memória.
+
+Erros de preenchimento ficam junto dos campos, com descrição acessível e foco no primeiro erro. Falhas de consulta têm nova tentativa própria e não são apresentadas como listas vazias. Uma gravação confirmada continua visível se a consulta seguinte ou a referência do fator falhar; nenhuma escrita é repetida automaticamente. Chamadas da API têm limite de 15 segundos, incluindo a leitura da resposta, e preservam o cancelamento das consultas desmontadas.
+
+No celular, o formulário de acesso vem antes da apresentação complementar. O rodapé institucional completo permanece na página inicial e usa uma versão compacta nas demais telas. A paleta, a esfera, a equipe, o botão Google e as logos institucionais são preservados. O sistema visual está em `../DESIGN.md`.
 
 O cálculo continua no backend, com decimais textuais, prevenção de gravação duplicada e fatores versionados. Os contadores da interface indicam itens **carregados**, sem assumir o total de todas as páginas. As fontes continuam limitadas a eletricidade, diesel, gasolina e GLP. Dashboard, ranking e exportação ficam para as próximas etapas.
 

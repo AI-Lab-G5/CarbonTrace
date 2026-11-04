@@ -16,7 +16,7 @@ export function Topbar({ apiStatusBadge, authorized = false }: TopbarProps) {
         <img src="/logo.png" alt="CarbonTrace" className="logo-img" width="112" height="42"/>
       </Link>
       <button ref={toggle} type="button" className="menu-toggle" aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="main-navigation" onClick={() => setOpen(!open)}>
-        <span aria-hidden="true">{open ? '×' : '☰'}</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden="true">{open ? <path d="m6 6 12 12M18 6 6 18"/> : <path d="M4 6h16M4 12h16M4 18h16"/>}</svg>
       </button>
       <nav id="main-navigation" className={`topbar-nav public-nav ${open ? 'is-open' : ''}`} aria-label="Navegação principal">
         <Link to="/#sobre" onClick={close}>O projeto</Link>

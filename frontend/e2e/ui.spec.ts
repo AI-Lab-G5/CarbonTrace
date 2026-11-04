@@ -92,8 +92,9 @@ test('rotas protegidas, histórico, rascunho, cálculo e layout responsivo', asy
   await page.screenshot({ path: testInfo.outputPath('consumos-mobile.png'), fullPage: true, animations: 'disabled' });
   await page.reload();
   await expect(page).toHaveURL(/\/consumos$/);
-  await page.getByRole('button', { name: /Eletricidade.*2025-10/ }).click();
+  await page.getByRole('button', { name: /Eletricidade.*outubro de 2025/ }).click();
   await expect(page.getByRole('region', { name: 'Resultado salvo' })).toContainText('57,750');
+  await expect(page.locator('.collection-steps [aria-current="step"]')).toHaveCount(1);
   await page.getByRole('link', { name: 'CarbonTrace — início' }).click();
   await expect(page).toHaveURL(/\/$/);
   await expect(page.getByRole('heading', { name: /Conheça o impacto/ })).toBeVisible();
@@ -174,7 +175,7 @@ test('início público, fotos da equipe, efeitos, menu mobile e cadastro separad
   await page.emulateMedia({ reducedMotion: 'reduce' });
   expect(await page.locator('.planet-sphere').evaluate(el => getComputedStyle(el).animationName)).toBe('none');
   await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+  await expect.poll(() => page.evaluate(() => { window.scrollTo({ top: 0, behavior: 'instant' }); return window.scrollY; })).toBe(0);
   await page.screenshot({ path: testInfo.outputPath('inicio-mobile.png'), fullPage: true, animations: 'disabled' });
   await page.getByRole('link', { name: /Primeiro acesso/ }).click();
   await expect(page).toHaveURL(/\/entrar\?modo=cadastro$/);
@@ -193,4 +194,79 @@ test('perfil da equipe permanece acessível quando uma foto falha', async ({ pag
   await member.scrollIntoViewIfNeeded();
   await expect(member.locator('.team-initials')).toHaveText('HM');
   await expect(member).toHaveAttribute('href', 'https://github.com/heitormontt');
+});
+
+test('validação local e rascunho sobrevivem à recarga sem repetir gravações', async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await setupApi(page); await login(page);
+  const writes: string[] = [];
+  page.on('request', request => { if (request.method() === 'PUT') writes.push(request.url()); });
+  await page.getByLabel('Loja', { exact: true }).selectOption('u');
+  await page.getByLabel('Competência').fill('2025-10');
+  await page.getByLabel('Fonte', { exact: true }).selectOption('eletricidade');
+  await page.getByLabel('Quantidade').fill('abc');
+  await page.getByLabel('Medida', { exact: true }).selectOption('kWh');
+  await page.getByRole('button', { name: 'Salvar consumo' }).click();
+  const quantity = page.getByLabel('Quantidade');
+  await expect(quantity).toBeFocused();
+  await expect(quantity).toHaveAttribute('aria-invalid', 'true');
+  await expect(quantity).toHaveAccessibleDescription(/decimal não negativa/);
+  expect(writes).toEqual([]);
+  await page.screenshot({ path: testInfo.outputPath('validacao-mobile.png'), fullPage: true, animations: 'disabled' });
+  await quantity.fill('1,5');
+  await page.reload();
+  await expect(page.getByRole('status').filter({ hasText: 'Rascunho recuperado' })).toBeVisible();
+  await expect(page.getByLabel('Quantidade')).toHaveValue('1,5');
+  await expect(page.getByLabel('Medida', { exact: true })).toHaveValue('kWh');
+  await page.getByRole('button', { name: 'Sair', exact: true }).click();
+  expect(await page.evaluate(() => Object.keys(sessionStorage).filter(key => key.startsWith('carbontrace:draft:')))).toEqual([]);
+});
+
+test('erro de consulta não vira vazio nem apaga dados após recuperar', async ({ page }) => {
+  await setupApi(page);
+  let unavailable = true;
+  await page.route('**/api/v1/unidades?*', route => unavailable ? route.fulfill({ status: 503, json: { detail: 'Consulta temporariamente indisponível.' } }) : route.fallback());
+  await login(page, '/unidades');
+  await expect(page.getByRole('alert')).toContainText('Consulta temporariamente indisponível');
+  await expect(page.getByText('Comece pela primeira loja')).toHaveCount(0);
+  await expect(page.getByLabel('Nome', { exact: true })).toBeDisabled();
+  unavailable = false;
+  await page.getByRole('button', { name: 'Consultar novamente', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Loja Centro' })).toBeVisible();
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('telas completas comportam texto longo, zoom e tamanhos intermediários', async ({ page }, testInfo) => {
+  const errors: string[] = [];
+  page.on('pageerror', error => errors.push(error.message));
+  const state = await setupApi(page);
+  state.units[0].nome = 'Unidade São João — operação com nome extenso '.repeat(4);
+  await login(page, '/unidades');
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  }
+  await page.setViewportSize({ width: 640, height: 900 });
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  for (const [path, name] of [['/', 'inicio'], ['/entrar', 'login'], ['/inexistente', '404']] as const) {
+    // O acesso autenticado redireciona /entrar; logout antes das telas públicas.
+    if (path === '/entrar') { await page.goto('/unidades'); await page.getByRole('button', { name: 'Sair', exact: true }).click(); }
+    await page.goto(path);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    if (path === '/entrar') {
+      await expect(page.getByRole('button', { name: 'Entrar', exact: true })).toBeInViewport();
+      const field = page.getByLabel('E-mail');
+      const border = await field.evaluate(el => getComputedStyle(el).borderColor);
+      expect(border).toBe('rgb(98, 111, 102)');
+    }
+    await page.screenshot({ path: testInfo.outputPath(`${name}-polish-mobile.png`), fullPage: true, animations: 'disabled' });
+  }
+  expect(errors).toEqual([]);
 });

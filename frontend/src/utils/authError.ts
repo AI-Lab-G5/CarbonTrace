@@ -14,6 +14,11 @@ export function authError(error: unknown): string {
     'auth/weak-password': 'A senha não atende à política do projeto. Use uma senha mais forte.',
     'auth/too-many-requests': 'Muitas tentativas. Aguarde um pouco antes de tentar novamente.',
     'auth/requires-recent-login': 'Entre novamente antes de concluir esta operação.',
+    'auth/invalid-credential': 'E-mail ou senha incorretos. Confira os dados ou use “Esqueci minha senha”.',
+    'auth/wrong-password': 'E-mail ou senha incorretos. Confira os dados ou use “Esqueci minha senha”.',
+    'auth/user-not-found': 'E-mail ou senha incorretos. Confira os dados ou use “Esqueci minha senha”.',
+    'auth/invalid-email': 'Informe um endereço de e-mail válido.',
+    'auth/user-disabled': 'Não foi possível acessar esta conta. Procure a equipe responsável.',
   };
   return (code && messages[code]) || 'Não foi possível entrar ou concluir a operação. Confira seus dados e tente novamente.';
 }

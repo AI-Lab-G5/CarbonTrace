@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router';
 import type { User } from 'firebase/auth';
 import { useJornadas } from '@/hooks/useJornadas';
+import { FormFeedback } from '@/components/FormFeedback';
 
 export function Jornadas({ user, expired }: { user: User; expired: () => void }) {
   const jornadas = useJornadas(user, expired);
@@ -19,12 +20,11 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
     </aside>
     <div className="workspace-content">
       <header className="page-heading">
-        <p className="eyebrow">CarbonTrace / {pathname === '/unidades' ? 'Unidades' : 'Consumos'}</p>
         <h1 ref={heading} tabIndex={-1}>{pathname === '/unidades' ? 'Unidades da empresa' : 'Coleta mensal'}</h1>
         <p>{pathname === '/unidades' ? 'Organize as lojas que fazem parte do seu inventário.' : 'Registre os consumos e consulte a origem de cada cálculo.'}</p>
       </header>
       {jornadas.message && <p className="feedback success-feedback" role="status">✓ {jornadas.message}</p>}
-      {jornadas.error && <div id="journey-error" role="alert" className="error-box feedback">⚠ {jornadas.error} <button type="button" className="btn ghost" disabled={jornadas.busy} onClick={jornadas.retry}>Consultar novamente</button></div>}
+      <FormFeedback message={jornadas.error} focus retry={jornadas.retry} retryLabel="Consultar novamente" disabled={jornadas.busy}/>
       <div key={pathname} className="route-enter"><Outlet context={jornadas}/></div>
     </div>
   </div>;

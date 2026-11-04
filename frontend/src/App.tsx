@@ -12,6 +12,7 @@ import { Onboarding, LinkGoogle } from '@/components/Onboarding';
 import { Jornadas } from '@/components/Jornadas';
 import { UnidadesPage } from '@/pages/UnidadesPage';
 import { ConsumosPage } from '@/pages/ConsumosPage';
+import { clearDrafts } from '@/utils/drafts';
 import './App.css';
 import './workspace.css';
 import './landing.css';
@@ -26,6 +27,7 @@ function AppContent() {
   const [session, setSession] = useState<Session>({user:null,phase:'restoring'});
   const [message, setMessage] = useState('');
   const generation = useRef(0);
+  const activeUid = useRef<string | null>(null);
   const check = useCallback(async (user: User | null, force = false) => {
     const current = ++generation.current;
     setSession({user,phase:user ? 'restoring' : 'visitor'});
@@ -41,6 +43,7 @@ function AppContent() {
     } catch (err) {
       if (current !== generation.current) return;
       if (err instanceof ApiError && err.status === 401) {
+        clearDrafts(user.uid);
         setMessage('Sessão expirada. Entre novamente.'); await signOut(auth);
       } else setSession({user,phase:'error',error:err instanceof Error ? err.message : 'Não foi possível conferir o acesso. Tente novamente.'});
     }
@@ -48,10 +51,14 @@ function AppContent() {
   useEffect(() => {
     if (authConfigError) return;
     const gen = generation;
-    const unsubscribe = onAuthStateChanged(auth, user => { void check(user); });
+    const unsubscribe = onAuthStateChanged(auth, user => {
+      if (activeUid.current && activeUid.current !== user?.uid) clearDrafts(activeUid.current);
+      activeUid.current = user?.uid || null;
+      void check(user);
+    });
     return () => { gen.current++; unsubscribe(); };
   }, [check]);
-  const expired = useCallback(() => { generation.current++; setSession({user:null,phase:'visitor'}); setMessage('Sessão expirada. Entre novamente.'); void signOut(auth); }, []);
+  const expired = useCallback(() => { if (activeUid.current) clearDrafts(activeUid.current); generation.current++; setSession({user:null,phase:'visitor'}); setMessage('Sessão expirada. Entre novamente.'); void signOut(auth); }, []);
   const {user,phase} = session;
   const isHome = location.pathname === '/';
   const requested = (location.state as { from?: string } | null)?.from;
@@ -81,7 +88,7 @@ function AppContent() {
     {message && <p className="wrap" role="status">⚠ {message}</p>}
     {user && !isHome && <div className="wrap session-bar"><span className="session-email">{user.email}</span><div className="auth-actions"><LinkGoogle key={user.uid} user={user}/><button className="btn ghost" onClick={() => {
         generation.current++; setSession({user,phase:'restoring'});
-        void signOut(auth).then(() => { setSession({user:null,phase:'visitor'}); setMessage('Você saiu da aplicação.'); }).catch(() => setSession({user,phase:'error',error:'Não foi possível sair. Tente novamente.'}));
+        void signOut(auth).then(() => { clearDrafts(user.uid); setSession({user:null,phase:'visitor'}); setMessage('Você saiu da aplicação.'); }).catch(() => setSession({user,phase:'error',error:'Não foi possível sair. Tente novamente.'}));
       }}>Sair</button></div></div>}
     <Routes>
       <Route path="/" element={<HomePage authorized={phase === 'authorized'}/>}/>
@@ -93,8 +100,8 @@ function AppContent() {
           <Route path="/consumos" element={<ConsumosPage/>}/>
         </Route>
       </Route>
-      <Route path="*" element={<section className="wrap card route-enter"><p className="eyebrow">404</p><h1>Página não encontrada</h1><p>Este endereço não está disponível no CarbonTrace.</p><Link className="btn" to="/">Voltar ao início</Link></section>}/>
+      <Route path="*" element={<section className="wrap card route-enter"><h1>Página não encontrada</h1><p>Este endereço não está disponível no CarbonTrace.</p><Link className="btn" to="/">Voltar ao início</Link></section>}/>
     </Routes>
     {!isHome && <ApiStatus />}
-  </main><Footer /></div>;
+  </main><Footer compact={!isHome}/></div>;
 }
