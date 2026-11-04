@@ -1,13 +1,12 @@
-export function Footer() {
+export function Footer({ compact = false }: { compact?: boolean }) {
   const anoAtual = new Date().getFullYear();
 
   return (
-    <footer className="wrap site-footer">
+    <footer className={`wrap site-footer${compact ? ' site-footer-compact' : ''}`}>
       <div className="footer-main">
         <div className="footer-about">
-          <p className="eyebrow">Nossa origem, nosso propósito</p>
-          <h2>Da UnB, <span>com um olhar para o futuro.</span></h2>
-          <p>O CarbonTrace é um projeto desenvolvido pela nossa equipe da Universidade de Brasília, no contexto do AI Lab UnB. Unimos tecnologia e consciência ambiental para tornar o impacto de cada consumo mais claro.</p>
+          {!compact && <h2>Da UnB, <span>com um olhar para o futuro.</span></h2>}
+          <p>{compact ? 'Desenvolvido pela nossa equipe da Universidade de Brasília, no contexto do AI Lab UnB.' : 'O CarbonTrace é um projeto desenvolvido pela nossa equipe da Universidade de Brasília, no contexto do AI Lab UnB. Unimos tecnologia e consciência ambiental para tornar o impacto de cada consumo mais claro.'}</p>
         </div>
         <div className="footer-affiliation">
           <p className="footer-affiliation-label">Conhecimento que conecta a nossa equipe</p>

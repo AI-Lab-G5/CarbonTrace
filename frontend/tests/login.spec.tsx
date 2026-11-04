@@ -121,6 +121,10 @@ describe('Componente Login', () => {
     await user.click(screen.getByRole('button', { name: 'Criar conta' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('A confirmação deve ser igual à senha.');
+    expect(screen.getByLabelText('Confirmar senha')).toHaveFocus();
+    expect(screen.getByLabelText('Confirmar senha')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText('Confirmar senha')).toHaveAccessibleDescription('A confirmação deve ser igual à senha.');
+    expect(screen.getByLabelText('Senha')).toHaveValue('SenhaForte123!');
     expect(createUserWithEmailAndPassword).not.toHaveBeenCalled();
   });
 

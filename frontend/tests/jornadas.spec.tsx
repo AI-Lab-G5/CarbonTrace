@@ -10,9 +10,9 @@ vi.mock('../src/api', () => ({ request: vi.fn() }));
 const api = vi.mocked(request);
 const user = { uid: 'a', getIdToken: vi.fn().mockResolvedValue('token') } as unknown as User;
 const empty = { itens: [], proximo_cursor: null };
-beforeEach(() => { api.mockReset(); api.mockResolvedValue(empty); });
-function renderJornadas(path = '/unidades', expired = vi.fn()) {
- return render(<MemoryRouter initialEntries={[path]}><Routes><Route element={<Jornadas user={user} expired={expired}/>}><Route path="/unidades" element={<UnidadesPage/>}/><Route path="/consumos" element={<ConsumosPage/>}/></Route></Routes></MemoryRouter>);
+beforeEach(() => { sessionStorage.clear(); api.mockReset(); api.mockResolvedValue(empty); });
+function renderJornadas(path = '/unidades', expired = vi.fn(), actor = user) {
+ return render(<MemoryRouter initialEntries={[path]}><Routes><Route element={<Jornadas user={actor} expired={expired}/>}><Route path="/unidades" element={<UnidadesPage/>}/><Route path="/consumos" element={<ConsumosPage/>}/></Route></Routes></MemoryRouter>);
 }
 test('lista vazia possui instrução e campos rotulados', async () => {
  renderJornadas();
@@ -115,4 +115,99 @@ test('consumo duplicado mostra resultado original e não grava novamente', async
  expect(await screen.findByRole('alert')).toHaveTextContent('Este consumo já existe');
  expect(screen.getByRole('region', { name: 'Resultado salvo' })).toHaveTextContent('57,750');
  expect(api.mock.calls.some(c => c[2]?.method === 'PUT')).toBe(false);
+});
+
+test('falha de consulta não afirma que a empresa não possui lojas e permite recuperar', async () => {
+ api.mockImplementation(async path => {
+  if (path.startsWith('/v1/unidades')) throw new Error('Serviço temporariamente indisponível.');
+  return empty;
+ });
+ renderJornadas();
+ expect(await screen.findByRole('alert')).toHaveTextContent('temporariamente indisponível');
+ expect(screen.queryByText(/Nenhuma unidade encontrada/)).not.toBeInTheDocument();
+ expect(screen.getByLabelText('Nome')).toBeDisabled();
+ api.mockResolvedValue(empty);
+ fireEvent.click(screen.getByRole('button', { name: 'Consultar novamente' }));
+ expect(await screen.findByText(/Nenhuma unidade encontrada/)).toBeVisible();
+ expect(screen.getByLabelText('Nome')).toBeEnabled();
+});
+
+test('quantidade inválida recebe foco, explicação local e preserva o rascunho', async () => {
+ mockJourney(); renderJornadas('/consumos'); await fillConsumption();
+ fireEvent.change(screen.getByLabelText('Quantidade'), { target: { value: '-1' } });
+ fireEvent.click(screen.getByRole('button', { name: 'Salvar consumo' }));
+ const quantity = screen.getByLabelText('Quantidade');
+ await waitFor(() => expect(quantity).toHaveFocus());
+ expect(quantity).toHaveAttribute('aria-invalid', 'true');
+ expect(quantity).toHaveAccessibleDescription(/decimal não negativa/);
+ expect(quantity).toHaveValue('-1');
+ expect(api.mock.calls.some(c => c[2]?.method === 'PUT')).toBe(false);
+ fireEvent.change(quantity, { target: { value: '1,5' } });
+ expect(quantity).not.toHaveAttribute('aria-invalid');
+ fireEvent.click(screen.getByRole('button', { name: 'Salvar consumo' }));
+ expect(await screen.findByText(/Consumo salvo e consultado/)).toBeVisible();
+});
+
+test('recupera coleta após recarregar e preserva cadastro ao navegar', async () => {
+ mockJourney(); const first = renderJornadas('/consumos'); await fillConsumption(); first.unmount();
+ renderJornadas('/consumos');
+ expect(screen.getByText('Rascunho recuperado nesta aba. Confira os dados antes de salvar.')).toBeVisible();
+ await screen.findByRole('option', { name: 'Eletricidade' });
+ expect(screen.getByLabelText('Loja')).toHaveValue('u');
+ expect(screen.getByLabelText('Competência')).toHaveValue('2025-10');
+ expect(screen.getByLabelText('Quantidade')).toHaveValue('1,5');
+ expect(screen.getByLabelText('Medida')).toHaveValue('MWh');
+ fireEvent.click(screen.getByRole('link', { name: /Unidades/ }));
+ fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Loja em preenchimento' } });
+ fireEvent.click(screen.getByRole('link', { name: /Consumos/ }));
+ fireEvent.click(screen.getByRole('link', { name: /Unidades/ }));
+ expect(screen.getByLabelText('Nome')).toHaveValue('Loja em preenchimento');
+});
+
+test('referência indisponível não transforma gravação confirmada em falha', async () => {
+ mockJourney(); const working = api.getMockImplementation()!;
+ api.mockImplementation(async (...args) => {
+  if (args[0].startsWith('/v1/fontes/versoes')) throw new Error('Referência indisponível.');
+  return working(...args);
+ });
+ renderJornadas('/consumos'); await fillConsumption();
+ fireEvent.click(screen.getByRole('button', { name: 'Salvar consumo' }));
+ expect(await screen.findByText(/Consumo salvo e consultado/)).toBeVisible();
+ expect(screen.getByRole('region', { name: 'Resultado salvo' })).toHaveTextContent('57,750');
+ expect(screen.getByRole('alert')).toHaveTextContent('Referência indisponível');
+ api.mockImplementation(working);
+ fireEvent.click(screen.getByRole('button', { name: 'Carregar referência novamente' }));
+ await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+ expect(api.mock.calls.filter(c => c[2]?.method === 'PUT')).toHaveLength(1);
+});
+
+test('mantém resultado confirmado quando a consulta após salvar falha', async () => {
+ mockJourney(); const working = api.getMockImplementation()!;
+ api.mockImplementation(async (...args) => {
+  if (args[0] === '/v1/consumos/c') throw new Error('Sem conexão.');
+  return working(...args);
+ });
+ renderJornadas('/consumos'); await fillConsumption();
+ fireEvent.click(screen.getByRole('button', { name: 'Salvar consumo' }));
+ expect(await screen.findByText('Consumo salvo. Não foi possível atualizar a consulta; confira os consumos salvos antes de reenviar.')).toBeVisible();
+ expect(screen.getByRole('region', { name: 'Resultado salvo' })).toHaveTextContent('57,750');
+ expect(api.mock.calls.filter(c => c[2]?.method === 'PUT')).toHaveLength(1);
+});
+
+test('rascunho de um usuário não aparece para outra conta', async () => {
+ mockJourney(); const first = renderJornadas('/consumos'); await fillConsumption(); first.unmount();
+ renderJornadas('/consumos', vi.fn(), { ...user, uid: 'outra-conta' } as User);
+ await screen.findByRole('option', { name: 'Loja Centro' });
+ expect(screen.getByLabelText('Loja')).toHaveValue('');
+ expect(screen.getByLabelText('Competência')).toHaveValue('');
+ expect(screen.queryByText(/Rascunho recuperado/)).not.toBeInTheDocument();
+});
+
+test('armazenamento bloqueado não impede preencher e salvar', async () => {
+ const storage = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new DOMException('Bloqueado', 'SecurityError'); });
+ try {
+  mockJourney(); renderJornadas('/consumos'); await fillConsumption();
+  fireEvent.click(screen.getByRole('button', { name: 'Salvar consumo' }));
+  expect(await screen.findByText(/Consumo salvo e consultado/)).toBeVisible();
+ } finally { storage.mockRestore(); }
 });
