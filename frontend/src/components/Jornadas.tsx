@@ -15,13 +15,14 @@ export function Jornadas({ user, expired }: { user: User; expired: () => void })
       <nav aria-label="Área de trabalho" className="workspace-nav">
         <NavLink to="/unidades"><span aria-hidden="true">01</span><div>Unidades<small>Lojas da sua empresa</small></div></NavLink>
         <NavLink to="/consumos"><span aria-hidden="true">02</span><div>Consumos<small>Coleta e resultados</small></div></NavLink>
+      <NavLink to="/dashboard"><div>Dashboard<small>Consolidado da rede</small></div></NavLink>
       </nav>
       <p className="sidebar-note">Cada consumo registrado torna suas emissões mais visíveis.</p>
     </aside>
     <div className="workspace-content">
       <header className="page-heading">
-        <h1 ref={heading} tabIndex={-1}>{pathname === '/unidades' ? 'Unidades da empresa' : 'Coleta mensal'}</h1>
-        <p>{pathname === '/unidades' ? 'Organize as lojas que fazem parte do seu inventário.' : 'Registre os consumos e consulte a origem de cada cálculo.'}</p>
+        <h1 ref={heading} tabIndex={-1}>{pathname === '/dashboard' ? 'Dashboard da rede' : pathname === '/unidades' ? 'Unidades da empresa' : 'Coleta mensal'}</h1>
+        <p>{pathname === '/dashboard' ? 'Consulte o panorama das emissões e as pendências de coleta.' : pathname === '/unidades' ? 'Organize as lojas que fazem parte do seu inventário.' : 'Registre os consumos e consulte a origem de cada cálculo.'}</p>
       </header>
       {jornadas.message && <p className="feedback success-feedback" role="status">✓ {jornadas.message}</p>}
       <FormFeedback message={jornadas.error} focus retry={jornadas.retry} retryLabel="Consultar novamente" disabled={jornadas.busy}/>

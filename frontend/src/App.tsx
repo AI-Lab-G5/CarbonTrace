@@ -11,6 +11,7 @@ import { HomePage } from '@/pages/HomePage';
 import { Onboarding, LinkGoogle } from '@/components/Onboarding';
 import { Jornadas } from '@/components/Jornadas';
 import { UnidadesPage } from '@/pages/UnidadesPage';
+import { DashboardPage } from '@/pages/DashboardPage';
 import { ConsumosPage } from '@/pages/ConsumosPage';
 import { clearDrafts } from '@/utils/drafts';
 import './App.css';
@@ -62,7 +63,7 @@ function AppContent() {
   const {user,phase} = session;
   const isHome = location.pathname === '/';
   const requested = (location.state as { from?: string } | null)?.from;
-  const destination = requested === '/consumos' ? '/consumos' : '/unidades';
+  const destination = ['/consumos', '/dashboard'].includes(requested || '') ? requested! : '/unidades';
   const protectedContent = phase === 'authorized' && user
     ? <Jornadas key={user.uid} user={user} expired={expired}/>
     : <Navigate to={phase === 'pending' ? '/acesso' : '/entrar'} replace state={{ from: location.pathname }} />;
@@ -74,7 +75,7 @@ function AppContent() {
         ? <section className="wrap card"><p role="alert">⚠ {session.error}</p><button className="btn" onClick={() => { void check(user,true); }}>Tentar novamente</button></section>
         : <Outlet/>;
   useEffect(() => {
-    const titles: Record<string, string> = { '/': 'Conheça o impacto. Transforme o futuro.', '/entrar': 'Entrar', '/acesso': 'Concluir acesso', '/unidades': 'Unidades', '/consumos': 'Consumos' };
+    const titles: Record<string, string> = { '/': 'Conheça o impacto. Transforme o futuro.', '/entrar': 'Entrar', '/acesso': 'Concluir acesso', '/unidades': 'Unidades', '/consumos': 'Consumos', '/dashboard': 'Dashboard' };
     document.title = `${titles[location.pathname] || 'Página não encontrada'} | CarbonTrace`;
     if (location.hash) {
       const section = document.getElementById(location.hash.slice(1));
@@ -98,6 +99,7 @@ function AppContent() {
         <Route element={protectedContent}>
           <Route path="/unidades" element={<UnidadesPage/>}/>
           <Route path="/consumos" element={<ConsumosPage/>}/>
+          <Route path="/dashboard" element={<DashboardPage/>}/>
         </Route>
       </Route>
       <Route path="*" element={<section className="wrap card route-enter"><h1>Página não encontrada</h1><p>Este endereço não está disponível no CarbonTrace.</p><Link className="btn" to="/">Voltar ao início</Link></section>}/>
