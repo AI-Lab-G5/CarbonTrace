@@ -49,3 +49,21 @@ test('identifica campos da validação e trata resposta de erro malformada', asy
  fetcher.mockResolvedValueOnce(new Response('{}', { status: 429 }));
  await expect(request('/v1/consumos', 't')).rejects.toThrow('Muitas solicitações');
 });
+
+test('leitura aceita espera de 10 segundos e cancela aos 65 segundos sem retry', async () => {
+ vi.useFakeTimers();
+ const fetcher=vi.fn((_url, options:RequestInit)=>new Promise<Response>((_resolve,reject)=>options.signal?.addEventListener('abort',()=>reject(new DOMException('cancelado','AbortError')))));
+ vi.stubGlobal('fetch',fetcher);
+ let finished=false;
+ const pending=expect(request('/v1/unidades','t').finally(()=>{finished=true;})).rejects.toThrow('demorou');
+ await vi.advanceTimersByTimeAsync(10000); expect(finished).toBe(false);
+ await vi.advanceTimersByTimeAsync(55000); await pending;
+ expect(fetcher).toHaveBeenCalledOnce();
+});
+
+test('leitura lenta pode concluir após 10 segundos sem erro', async()=>{
+ vi.useFakeTimers();
+ vi.stubGlobal('fetch',vi.fn(()=>new Promise<Response>(resolve=>setTimeout(()=>resolve(new Response('{"itens":[]}')),11000))));
+ const pending=request('/v1/unidades','t'); await vi.advanceTimersByTimeAsync(11000);
+ await expect(pending).resolves.toEqual({itens:[]});
+});

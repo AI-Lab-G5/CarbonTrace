@@ -1,3 +1,4 @@
+import { API_BASE_URL, READ_TIMEOUT_MS, WRITE_TIMEOUT_MS } from './apiConfig';
 export class ApiError extends Error {
   status: number;
   fields: Record<string, string>;
@@ -9,12 +10,12 @@ export async function request<T>(path: string, token: string, options: RequestIn
   if (options.signal?.aborted) controller.abort();
   options.signal?.addEventListener('abort', cancel, { once: true });
   let timedOut = false;
-  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, 15000);
   const writing = options.method && !['GET', 'HEAD'].includes(options.method.toUpperCase());
+  const timeout = setTimeout(() => { timedOut = true; controller.abort(); }, writing ? WRITE_TIMEOUT_MS : READ_TIMEOUT_MS);
   try {
     let response: Response;
     try {
-      response = await fetch(`${import.meta.env.VITE_API_BASE_URL || '/api'}${path}`, {
+      response = await fetch(`${API_BASE_URL}${path}`, {
         ...options, signal: controller.signal, headers: { Accept: 'application/json', 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...options.headers },
       });
     } catch (error) {

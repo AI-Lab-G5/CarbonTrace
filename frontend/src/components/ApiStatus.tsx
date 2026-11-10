@@ -1,3 +1,4 @@
+import { API_BASE_URL, READ_TIMEOUT_MS } from '@/apiConfig';
 import { useEffect, useRef, useState } from 'react';
 
 export interface HealthResponse {
@@ -17,7 +18,7 @@ interface ApiStatusProps {
   onStatusChange?: (status: ApiStatusState) => void;
 }
 
-export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProps) {
+export function ApiStatus({ apiBaseUrl = API_BASE_URL, onStatusChange }: ApiStatusProps) {
   const [status, setStatus] = useState<ApiStatusState>({ state: 'loading' });
   const [retryKey, setRetryKey] = useState<number>(0);
 
@@ -29,7 +30,7 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
   useEffect(() => {
     let ignore = false;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const timeout = setTimeout(() => controller.abort(), READ_TIMEOUT_MS);
 
     fetch(`${apiBaseUrl}/healthz`, {
       signal: controller.signal,
@@ -99,7 +100,7 @@ export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProp
         <div className="status-box" role="status" aria-label="Consultando integridade do backend">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <span className="spinner" />
-            <p style={{ margin: 0 }}>Consultando integridade do backend (/api/healthz)...</p>
+            <p style={{ margin: 0 }}>Conectando à plataforma. A primeira conexão pode levar cerca de um minuto.</p>
           </div>
         </div>
       )}
