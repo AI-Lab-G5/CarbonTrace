@@ -41,3 +41,15 @@ test('filtros controlados notificam seleção sem fazer chamada HTTP',()=>{
  fireEvent.change(screen.getByLabelText('Região'),{target:{value:'s'}});
  expect(change).toHaveBeenLastCalledWith({month:'2026-10',unit:'',region:'s',snapshot:'s'});
 });
+
+test('exibe o cenário 100/100/200, regiões 200/200 e total 400 sem somar linhas',()=>{
+ render(<DashboardPanel state={{kind:'ready',data}} retry={vi.fn()}/>);
+ const total=screen.getByText('Total do recorte').parentElement!;
+ expect(total).toHaveTextContent('400,000 kgCO₂e');
+ expect(screen.getByText('Mediana').parentElement!).toHaveTextContent('100,000 kgCO₂e');
+ const ranking=document.querySelector('ol')!;
+ expect(ranking).toHaveTextContent('Loja Sul200,000 kgCO₂e');
+ expect(ranking).toHaveTextContent('Loja Centro100,000 kgCO₂e');
+ expect(ranking).toHaveTextContent('Loja Norte100,000 kgCO₂e');
+ for(const region of ['Norte','Sul']) expect(screen.getByText(region).parentElement!).toHaveTextContent('200,000 kgCO₂e');
+});

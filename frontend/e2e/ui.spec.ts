@@ -270,3 +270,17 @@ test('telas completas comportam texto longo, zoom e tamanhos intermediários', a
   }
   expect(errors).toEqual([]);
 });
+
+test('dashboard exige sessão e não consulta agregado incompleto', async ({page}) => {
+ await setupApi(page);
+ const aggregates:string[]=[];
+ page.on('request',request=>{if(request.url().includes('/consolidado')) aggregates.push(request.url());});
+ await login(page,'/dashboard');
+ await expect(page.getByRole('heading',{name:'Dashboard da rede'})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'Consolidado ainda não disponível'})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Registrar consumo',exact:true})).toHaveAttribute('href','/consumos');
+ expect(aggregates).toEqual([]);
+ await page.getByRole('button',{name:'Sair',exact:true}).click();
+ await expect(page).toHaveURL(/\/entrar$/);
+ await expect(page.getByRole('heading',{name:'Dashboard da rede'})).toHaveCount(0);
+});

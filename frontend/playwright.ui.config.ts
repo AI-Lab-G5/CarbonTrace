@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  testMatch: 'ui.spec.ts',
+  testMatch: ['ui.spec.ts', 'dashboard.visual.spec.ts'],
   timeout: 30000,
   workers: 1,
   use: { baseURL: 'http://127.0.0.1:3100', screenshot: 'only-on-failure', trace: 'retain-on-failure' },
