@@ -1,0 +1,13 @@
+.dashboard-panel { overflow-wrap: anywhere; }
+.dashboard-summary, .dashboard-breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 1.5rem; }
+.dashboard-summary { padding-block: 1rem; border-block: 1px solid var(--line); }
+.dashboard-summary dd { margin: .5rem 0; font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.dashboard-summary dt, .dashboard-values dt { color: var(--muted); }
+.dashboard-group { margin-top: 1.5rem; }
+.dashboard-values > div { margin-block: 1rem; }
+.dashboard-values dd { margin: .25rem 0; font-variant-numeric: tabular-nums; }
+.dashboard-ranking { padding-left: 1.5rem; }
+.dashboard-ranking li { padding: 1rem .25rem; border-bottom: 1px solid var(--line); }
+.dashboard-ranking li > span { display: block; margin-top: .5rem; font-variant-numeric: tabular-nums; }
+.dashboard-ranking p { color: var(--muted); }
+.dashboard-status-icon { vertical-align: middle; margin-right: .5rem; flex-shrink: 0; }
