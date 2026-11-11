@@ -196,6 +196,38 @@ barato - `offset` paga a leitura dos documentos que descarta.
 Um cursor de outra empresa devolve 400: ele é resolvido sob o caminho de quem
 chama, onde aquele documento não existe.
 
+## Agregados e snapshots (J4)
+
+O dashboard não varre os consumos. Ele lê **snapshots**: totais por unidade,
+região, mês e escopo, gravados num momento explícito.
+
+| Método | Rota | O que faz |
+|---|---|---|
+| POST | `/v1/snapshots` | Gera o snapshot de uma competência — **a única rota que grava** |
+| GET | `/v1/snapshots` | Lista os snapshots, paginado |
+| GET | `/v1/snapshots/{id}` | Cabeçalho com totais por região e escopo |
+| GET | `/v1/snapshots/{id}/unidades` | Linhas por unidade, paginado, filtro por região |
+| GET | `/v1/snapshots/{id}/comparacao` | Ranking e desvio contra a mediana |
+| GET | `/v1/agregados?competencia=` | Atalho: a versão vigente da competência |
+
+**Leitura nunca grava.** Competência sem snapshot responde 404 com a instrução
+de gerar — não gera sozinha. Um `GET` que escreve torna o custo imprevisível e
+faz duas telas abertas disputarem o mesmo documento.
+
+**Reenviar não duplica.** Cada snapshot carrega a impressão digital do seu
+conteúdo. Gerar de novo sem mudança nos lançamentos devolve 200 com
+`criado: false` e o snapshot que já existe. Se algum lançamento mudou, nasce a
+versão seguinte e a anterior fica — snapshot nunca é editado nem apagado.
+
+Paginação dessas rotas: padrão **20**, máximo **100** (CA-07), mais apertado
+que o 50/200 das listas de J1–J3.
+
+Razão completa em
+[ADR-010](../docs/arquitetura/decisoes_adrs/0010-snapshots-de-agregados.md).
+
+O `GET /v1/consolidado` continua funcionando, marcado como obsoleto: ele
+recalcula varrendo os consumos a cada chamada, que é o custo que o J4 elimina.
+
 ## Decisões registradas
 
 Os números dos ADRs deste repositório são locais e não correspondem
@@ -205,6 +237,7 @@ automaticamente aos de `documentacao`.
 - [ADR-006](../docs/arquitetura/decisoes_adrs/0006-idempotencia-de-lancamentos.md) - idempotência dos lançamentos
 - [ADR-007](../docs/arquitetura/decisoes_adrs/0007-modelo-de-dados-multi-tenant.md) - isolamento entre empresas
 - [ADR-009](../docs/arquitetura/decisoes_adrs/0009-aritmetica-decimal-e-arredondamento.md) - aritmética decimal e arredondamento
+- [ADR-010](../docs/arquitetura/decisoes_adrs/0010-snapshots-de-agregados.md) - snapshots de agregados
 
 ## Dois detalhes que custam tempo quando esquecidos
 
