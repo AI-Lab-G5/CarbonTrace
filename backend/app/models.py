@@ -33,7 +33,21 @@ def _decimal_de_texto(valor: object) -> object:
 Quantidade = Annotated[Decimal, BeforeValidator(_decimal_de_texto)]
 
 
-class Unidade(BaseModel):
+class Autoria(BaseModel):
+    """Quem gravou e quando (CA-01).
+
+    Preenchido pelo servidor a partir da claim do token. O que o cliente
+    mandar nesses campos e descartado: autoria declarada pelo proprio
+    cliente nao prova nada.
+    """
+
+    criado_por_uid: str | None = None
+    criado_em: str | None = Field(default=None, description="ISO 8601 UTC")
+    atualizado_por_uid: str | None = None
+    atualizado_em: str | None = Field(default=None, description="ISO 8601 UTC")
+
+
+class Unidade(Autoria):
     """Uma loja, filial ou franquia da rede."""
 
     id: str | None = None
@@ -55,6 +69,36 @@ class Unidade(BaseModel):
         return limpo
 
 
+class EmpresaEntrada(BaseModel):
+    """Cadastro de empresa. O codigo e a identidade dela no sistema."""
+
+    codigo: str = Field(
+        min_length=3,
+        max_length=40,
+        description="Minusculas, digitos e hifen. Unico: duplicado da 409.",
+    )
+    nome: str = Field(min_length=1, max_length=120)
+
+    @field_validator("codigo")
+    @classmethod
+    def codigo_valido(cls, v: str) -> str:
+        from app.services.empresas import validar_codigo
+
+        return validar_codigo(v)
+
+    @field_validator("nome")
+    @classmethod
+    def nome_nao_vazio(cls, v: str) -> str:
+        if not v.strip():
+            raise ValueError("Nome nao pode ser so espaco.")
+        return v.strip()
+
+
+class Empresa(Autoria):
+    codigo: str
+    nome: str
+
+
 class ConsumoEntrada(BaseModel):
     """Lancamento mensal de uma fonte numa unidade."""
 
@@ -73,7 +117,7 @@ class ConsumoEntrada(BaseModel):
             raise ValueError(erro.mensagem()) from erro
 
 
-class Consumo(BaseModel):
+class Consumo(Autoria):
     """Lancamento ja calculado e persistido.
 
     Guarda a versao e o valor do fator aplicado. E o que permite
