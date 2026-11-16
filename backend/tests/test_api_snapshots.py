@@ -72,6 +72,19 @@ def test_gerar_cria_a_primeira_versao(como_funcionario, rede):
     assert corpo["snapshot"]["unidades_no_total"] == 3
 
 
+def test_geracao_registra_autoria_e_data_utc(como_funcionario, rede):
+    from datetime import datetime
+
+    snap = como_funcionario.post(
+        "/v1/snapshots", json={"competencia": "2026-01"}
+    ).json()["snapshot"]
+
+    assert snap["gerado_por_uid"] == "ana"
+    instante = datetime.fromisoformat(snap["gerado_em"])
+    assert instante.tzinfo is not None
+    assert instante.utcoffset().total_seconds() == 0
+
+
 def test_total_conferido_a_mao(como_funcionario, rede):
     """1500 + 1000 + 3000 kWh x 0,0426 = 63,900 + 42,600 + 127,800."""
     corpo = como_funcionario.post(

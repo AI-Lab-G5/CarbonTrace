@@ -2,7 +2,7 @@
 
 API de inventário de emissões de GEE. FastAPI + Cloud Firestore.
 
-Versão **0.2.0** - Checkpoint 2, entrega das Jornadas 1, 2 e 3.
+Versão **0.3.0** - Checkpoint 3, entrega das Jornadas 1 a 4, autoria e código único de empresa.
 
 ## Subir tudo
 
@@ -89,7 +89,11 @@ incluindo-as por engano.
 | GET PUT | `/v1/consumos` | J2 - lançamento mensal (GET paginado, PUT idempotente) |
 | GET | `/v1/consumos/{id}` | J2 |
 | POST | `/v1/consumos/{id}/recalculo` | J3 - prova do CA-03 |
-| GET | `/v1/consolidado` | J3 - total e mediana da rede na competência |
+| GET | `/v1/consolidado` | J3 [obsoleto] - preferir `/v1/agregados` |
+| POST | `/v1/empresas` | CA-01 - cadastra empresa com código único |
+| GET | `/v1/empresas/{codigo}` | CA-01 - consulta disponibilidade de código |
+| POST | `/v1/onboarding/resgate` | Onboarding - resgate de convite |
+| GET | `/v1/onboarding/acesso` | Onboarding - tenant e papel ativos |
 
 Contrato completo em [`docs/api/openapi.yaml`](../docs/api/openapi.yaml),
 gerado a partir do código:
@@ -119,7 +123,7 @@ e os valores conferidos à mão em
 ## Testes
 
 ```bash
-pytest           # suíte completa, 182 testes, sem dependência externa
+pytest           # suíte completa, 301 testes, sem dependência externa
 ruff check .     # lint
 ```
 
@@ -133,10 +137,15 @@ rodavam na pipeline.
 | `test_dominio_numeros.py` | fronteira Decimal: float recusado, texto aceito |
 | `test_dominio_competencia.py` | formato AAAA-MM, piso 2025-01, teto no mês corrente |
 | `test_dominio_calculo.py` | a conta, a ordem das operações, o arredondamento |
-| `test_autorizacao.py` | 11 rotas × 4 cenários: sem token, expirado, papel errado, empresa errada |
+| `test_dominio_agregacao.py` | igualdade exata por unidade, região e escopo; mediana e alertas |
+| `test_autorizacao.py` | rotas protegidas × 4 cenários: sem token, expirado, papel errado, empresa errada |
 | `test_api_validacao.py` | entrada inválida barrada antes de chegar ao banco |
 | `test_api_consumos.py` | fluxo HTTP → domínio → persistência → HTTP |
+| `test_api_autoria.py` | autoria (UID e data UTC) na criação e correção de registros |
+| `test_api_empresas.py` | cadastro com código único e conflito 409 |
+| `test_api_snapshots.py` | geração idempotente, versionamento, paginação 20/100 e comparação |
 | `test_api_paginacao.py` | listas limitadas; percorrer tudo não repete nem pula item |
+| `test_convites.py` | resgate de convite e atribuição de claims |
 | `test_isolamento_tenant.py` | empresa B não lê, não lista e não escreve na empresa A |
 
 A verificação de assinatura do token é substituída nos testes, por uma persona
@@ -159,11 +168,17 @@ app/
 │   ├── unidades.py      conversão entre unidades de medida
 │   ├── competencia.py   validação de AAAA-MM
 │   ├── calculo.py       o motor: calcular, recalcular, somar, mediana
+│   ├── agregacao.py     agregados por unidade, região e escopo; comparação
 │   └── erros.py         erros de domínio com mensagem para o usuário
 ├── routers/             uma rota por recurso
 └── services/
+    ├── autoria.py       carimbo de criação/alteração e hora UTC
+    ├── convites.py      resgate de convite e claims de acesso
+    ├── empresas.py      cadastro e busca por código único
     ├── fatores.py       leitura do catálogo versionado
-    └── persistencia.py  tradução domínio ↔ documento do Firestore
+    ├── paginacao.py     paginação por cursor
+    ├── persistencia.py  tradução domínio ↔ documento do Firestore
+    └── snapshots.py     geração e leitura de snapshots imutáveis
 ```
 
 `dominio/` não importa FastAPI nem Firestore. É o que permite testar a conta

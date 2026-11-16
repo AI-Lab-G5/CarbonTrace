@@ -35,6 +35,8 @@ import uuid
 from collections.abc import Iterator
 from typing import Any
 
+from google.api_core.exceptions import AlreadyExists
+
 
 class _Snapshot:
     """Equivalente de DocumentSnapshot, so com o que as rotas leem."""
@@ -59,6 +61,17 @@ class _DocumentRef:
         self.id = doc_id
 
     def set(self, dados: dict[str, Any]) -> None:
+        self._banco.gravar(self._caminho, self.id, dados)
+
+    def create(self, dados: dict[str, Any]) -> None:
+        """Grava so se ainda nao existe.
+
+        E o que o Firestore de verdade faz, e o que torna o codigo unico
+        de empresa uma garantia e nao uma esperanca: a checagem e a
+        gravacao sao a mesma operacao, sem janela entre as duas.
+        """
+        if self._banco.ler(self._caminho, self.id) is not None:
+            raise AlreadyExists(f"Documento {self._caminho}/{self.id} ja existe.")
         self._banco.gravar(self._caminho, self.id, dados)
 
     def get(self) -> _Snapshot:

@@ -25,11 +25,11 @@ auditavel e atende "preservar snapshots anteriores" do CA-04.
 from __future__ import annotations
 
 import hashlib
-from datetime import UTC, datetime
 
 from app.db import colecao_do_tenant
 from app.dominio.agregacao import Agregado, Lancamento, agregar
 from app.dominio.numeros import como_texto, para_decimal
+from app.services.autoria import agora
 
 COLECAO = "snapshots"
 SUBCOLECAO_UNIDADES = "unidades"
@@ -93,17 +93,19 @@ def lancamentos_da_competencia(
         lancamentos.append(
             Lancamento(
                 unidade_id=dados["unidade_id"],
-                unidade_nome=unidade.get("nome", dados["unidade_id"]),
+                unidade_nome=unidade.get("nome") or dados["unidade_id"],
                 # Regiao = UF, enquanto a definicao do Tech Lead (#34)
                 # nao chega. Unidade sem UF nao some do total: cai em
                 # "--", visivel na tela como cadastro a corrigir.
-                regiao=unidade.get("uf", "--"),
+                regiao=unidade.get("uf") or "--",
                 fonte_id=dados["fonte_id"],
                 escopo=dados["escopo"],
                 emissao_kg_co2e=para_decimal(
                     dados["emissao_kg_co2e"], campo="emissao_kg_co2e"
                 ),
-                unidade_ativa=unidade.get("ativa", True),
+                unidade_ativa=(
+                    True if unidade.get("ativa") is None else bool(unidade["ativa"])
+                ),
             )
         )
     return lancamentos
@@ -152,7 +154,7 @@ def gravar(
     documento = {
         "competencia": agregado.competencia,
         "versao": versao,
-        "gerado_em": datetime.now(UTC).isoformat(timespec="seconds"),
+        "gerado_em": agora(),
         "gerado_por_uid": uid,
         "impressao_digital": impressao,
         "total_kg_co2e": como_texto(agregado.total_kg_co2e),

@@ -112,6 +112,12 @@ PERSONAS: dict[str, dict] = {
     "funcionario-b": claims(
         uid="bruno", tenant_id=TENANT_B, email="bruno@empresa-b.exemplo"
     ),
+    # Segundo funcionario da MESMA empresa. Existe para os testes de
+    # autoria: com um usuario so, "preservou quem criou" passaria
+    # trivialmente, porque criador e corretor seriam a mesma pessoa.
+    "colega-a": claims(
+        uid="carlos", tenant_id=TENANT_A, email="carlos@empresa-a.exemplo"
+    ),
     "papel-errado": claims(papel="auditor_externo"),
     "sem-empresa": {"uid": "novo", "papel": "funcionario"},
 }
@@ -160,6 +166,13 @@ def cliente() -> TestClient:
 def como_funcionario() -> TestClient:
     """Cliente autenticado como funcionario da empresa A."""
     with _cliente_como("funcionario-a") as c:
+        yield c
+
+
+@pytest.fixture
+def como_colega() -> TestClient:
+    """Outro funcionario da empresa A."""
+    with _cliente_como("colega-a") as c:
         yield c
 
 

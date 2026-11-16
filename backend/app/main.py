@@ -7,6 +7,7 @@ from app.config import settings
 from app.routers import (
     consolidado,
     consumos,
+    empresas,
     fontes,
     health,
     onboarding,
@@ -43,3 +44,4 @@ app.include_router(consumos.router)
 app.include_router(consolidado.router)
 app.include_router(onboarding.router)
 app.include_router(snapshots.router)
+app.include_router(empresas.router)

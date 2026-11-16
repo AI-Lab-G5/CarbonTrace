@@ -42,6 +42,19 @@ LIMITE_PADRAO = 20
 LIMITE_MAXIMO = 100
 
 
+def _resumo_de(doc_id: str, dados: dict) -> SnapshotResumo:
+    return SnapshotResumo(
+        id=doc_id,
+        competencia=dados["competencia"],
+        versao=dados["versao"],
+        gerado_em=dados["gerado_em"],
+        gerado_por_uid=dados["gerado_por_uid"],
+        impressao_digital=dados["impressao_digital"],
+        total_kg_co2e=para_decimal(dados["total_kg_co2e"], campo="total_kg_co2e"),
+        unidades_no_total=dados["unidades_no_total"],
+    )
+
+
 def _snapshot_de(doc_id: str, dados: dict) -> Snapshot:
     return Snapshot(
         id=doc_id,
@@ -152,21 +165,7 @@ def listar_snapshots(
         )
 
     documentos, proximo = fatiar(colecao, consulta, cursor, limite)
-    itens = [
-        SnapshotResumo(
-            id=d.id,
-            competencia=d.to_dict()["competencia"],
-            versao=d.to_dict()["versao"],
-            gerado_em=d.to_dict()["gerado_em"],
-            gerado_por_uid=d.to_dict()["gerado_por_uid"],
-            impressao_digital=d.to_dict()["impressao_digital"],
-            total_kg_co2e=para_decimal(
-                d.to_dict()["total_kg_co2e"], campo="total_kg_co2e"
-            ),
-            unidades_no_total=d.to_dict()["unidades_no_total"],
-        )
-        for d in documentos
-    ]
+    itens = [_resumo_de(d.id, d.to_dict()) for d in documentos]
 
     return Pagina(
         itens=itens,
@@ -210,8 +209,9 @@ def listar_unidades(
         .collection(SUBCOLECAO_UNIDADES)
     )
     consulta = colecao
-    if regiao:
-        consulta = consulta.where(filter=FieldFilter("regiao", "==", regiao.upper()))
+    regiao_limpa = regiao.strip().upper() if regiao else ""
+    if regiao_limpa:
+        consulta = consulta.where(filter=FieldFilter("regiao", "==", regiao_limpa))
 
     documentos, proximo = fatiar(colecao, consulta, cursor, limite)
     itens = [_linha_de(d.to_dict()) for d in documentos]

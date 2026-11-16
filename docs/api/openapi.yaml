@@ -30,6 +30,7 @@ paths:
           content:
             application/json:
               schema:
+                additionalProperties: true
                 type: object
                 title: Response Healthz Healthz Get
   /readyz:
@@ -47,6 +48,7 @@ paths:
           content:
             application/json:
               schema:
+                additionalProperties: true
                 type: object
                 title: Response Readyz Readyz Get
   /v1/unidades:
@@ -687,6 +689,66 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /v1/empresas:
+    post:
+      tags:
+      - empresas
+      summary: Cadastra uma empresa com codigo unico
+      operationId: cadastrar_v1_empresas_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmpresaEntrada'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empresa'
+        '409':
+          description: Codigo ja usado por outra empresa
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /v1/empresas/{codigo}:
+    get:
+      tags:
+      - empresas
+      summary: Consulta uma empresa pelo codigo
+      description: 'Publico para quem esta autenticado: serve para a tela de cadastro
+        dizer se um codigo esta livre antes de enviar. Devolve apenas codigo e nome
+        -- nenhum dado de consumo.'
+      operationId: obter_v1_empresas__codigo__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Codigo
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empresa'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
     ComparacaoSaida:
@@ -757,6 +819,28 @@ components:
       description: Agregado da rede numa competencia.
     Consumo:
       properties:
+        criado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Por Uid
+        criado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Em
+          description: ISO 8601 UTC
+        atualizado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Por Uid
+        atualizado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Em
+          description: ISO 8601 UTC
         id:
           type: string
           title: Id
@@ -853,6 +937,60 @@ components:
       - unidade_medida
       title: ConsumoEntrada
       description: Lancamento mensal de uma fonte numa unidade.
+    Empresa:
+      properties:
+        criado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Por Uid
+        criado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Em
+          description: ISO 8601 UTC
+        atualizado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Por Uid
+        atualizado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Em
+          description: ISO 8601 UTC
+        codigo:
+          type: string
+          title: Codigo
+        nome:
+          type: string
+          title: Nome
+      type: object
+      required:
+      - codigo
+      - nome
+      title: Empresa
+    EmpresaEntrada:
+      properties:
+        codigo:
+          type: string
+          maxLength: 40
+          minLength: 3
+          title: Codigo
+          description: 'Minusculas, digitos e hifen. Unico: duplicado da 409.'
+        nome:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Nome
+      type: object
+      required:
+      - codigo
+      - nome
+      title: EmpresaEntrada
+      description: Cadastro de empresa. O codigo e a identidade dela no sistema.
     Fator:
       properties:
         fonte_id:
@@ -1274,6 +1412,28 @@ components:
       title: TotalRegiaoSaida
     Unidade:
       properties:
+        criado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Por Uid
+        criado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Em
+          description: ISO 8601 UTC
+        atualizado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Por Uid
+        atualizado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Em
+          description: ISO 8601 UTC
         id:
           anyOf:
           - type: string
@@ -1316,6 +1476,11 @@ components:
         type:
           type: string
           title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
       type: object
       required:
       - loc
