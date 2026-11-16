@@ -1,4 +1,5 @@
 from decimal import Decimal
+
 import pytest
 
 from tests.conftest import TENANT_A, TENANT_B
@@ -50,32 +51,54 @@ def test_consolidado_agrega_todos_lancamentos_elegiveis(
     competencia = "2026-10"
 
     for uid, nome in [("u1", "Loja Centro"), ("u2", "Loja Norte"), ("u3", "Loja Sul")]:
-        banco.collection("tenants").document(TENANT_A).collection("unidades").document(uid).set(
-            {"nome": nome}
+        (
+            banco.collection("tenants")
+            .document(TENANT_A)
+            .collection("unidades")
+            .document(uid)
+            .set({"nome": nome})
         )
 
     for item in lancamentos:
-        banco.collection("tenants").document(TENANT_A).collection("consumos").document(item["id"]).set(
-            {
-                "competencia": competencia,
-                **item,
-            }
+        (
+            banco.collection("tenants")
+            .document(TENANT_A)
+            .collection("consumos")
+            .document(item["id"])
+            .set(
+                {
+                    "competencia": competencia,
+                    **item,
+                }
+            )
         )
 
     # Ruído de outro tenant e outra competência (não devem entrar na soma)
-    banco.collection("tenants").document(TENANT_B).collection("consumos").document("outro-tenant").set(
-        {
-            "competencia": competencia,
-            "unidade_id": "u1",
-            "emissao_kg_co2e": "999.000",
-        }
+    (
+        banco.collection("tenants")
+        .document(TENANT_B)
+        .collection("consumos")
+        .document("outro-tenant")
+        .set(
+            {
+                "competencia": competencia,
+                "unidade_id": "u1",
+                "emissao_kg_co2e": "999.000",
+            }
+        )
     )
-    banco.collection("tenants").document(TENANT_A).collection("consumos").document("outra-comp").set(
-        {
-            "competencia": "2026-09",
-            "unidade_id": "u1",
-            "emissao_kg_co2e": "500.000",
-        }
+    (
+        banco.collection("tenants")
+        .document(TENANT_A)
+        .collection("consumos")
+        .document("outra-comp")
+        .set(
+            {
+                "competencia": "2026-09",
+                "unidade_id": "u1",
+                "emissao_kg_co2e": "500.000",
+            }
+        )
     )
 
     resp = como_funcionario.get(f"/v1/consolidado?competencia={competencia}")
@@ -86,7 +109,10 @@ def test_consolidado_agrega_todos_lancamentos_elegiveis(
     assert len(body["por_unidade"]) == qtd_unidades_esperada
 
     if len(lancamentos) == 5:
-        por_uid = {linha["unidade_id"]: Decimal(str(linha["emissao_kg_co2e"])) for linha in body["por_unidade"]}
+        por_uid = {
+            linha["unidade_id"]: Decimal(str(linha["emissao_kg_co2e"]))
+            for linha in body["por_unidade"]
+        }
         assert por_uid["u1"] == Decimal("15.000")
         assert por_uid["u2"] == Decimal("10.000")
         assert por_uid["u3"] == Decimal("5.000")
