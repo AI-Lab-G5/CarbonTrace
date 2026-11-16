@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from app.auth import Identidade, funcionario_atual
 from app.db import colecao_do_tenant
 from app.models import Pagina, Unidade
+from app.services.autoria import CAMPOS_DE_AUTORIA, marcar_criacao
 from app.services.paginacao import LIMITE_MAXIMO, LIMITE_PADRAO, fatiar
 
 router = APIRouter(prefix="/v1/unidades", tags=["unidades"])
@@ -44,7 +45,11 @@ def criar(
     entrada: Unidade,
     identidade: Identidade = Depends(funcionario_atual),
 ) -> Unidade:
-    dados = entrada.model_dump(exclude={"id"})
+    # A autoria vinda do cliente e descartada: quem grava e quem o token
+    # diz, nao quem o corpo do pedido afirma.
+    dados = entrada.model_dump(exclude={"id", *CAMPOS_DE_AUTORIA})
+    dados = marcar_criacao(dados, identidade.uid)
+
     ref = colecao_do_tenant(identidade.tenant_id, "unidades").document()
     ref.set(dados)
     return Unidade(id=ref.id, **dados)

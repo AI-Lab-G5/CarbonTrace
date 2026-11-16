@@ -54,6 +54,12 @@ def consumo_de_documento(doc_id: str, dados: dict) -> Consumo:
             dados["emissao_kg_co2e"], campo="emissao_kg_co2e"
         ),
         escopo=dados["escopo"],
+        # Autoria e opcional de proposito: lancamentos gravados antes do
+        # CA-01 nao a tem, e devolver None e mais honesto que inventar.
+        criado_por_uid=dados.get("criado_por_uid"),
+        criado_em=dados.get("criado_em"),
+        atualizado_por_uid=dados.get("atualizado_por_uid"),
+        atualizado_em=dados.get("atualizado_em"),
     )
 
 

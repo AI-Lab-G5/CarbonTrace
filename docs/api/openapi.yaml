@@ -30,7 +30,6 @@ paths:
           content:
             application/json:
               schema:
-                additionalProperties: true
                 type: object
                 title: Response Healthz Healthz Get
   /readyz:
@@ -48,7 +47,6 @@ paths:
           content:
             application/json:
               schema:
-                additionalProperties: true
                 type: object
                 title: Response Readyz Readyz Get
   /v1/unidades:
@@ -418,6 +416,106 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
+  /v1/onboarding/resgate:
+    post:
+      tags:
+      - onboarding
+      summary: Resgate
+      operationId: resgate_v1_onboarding_resgate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Resgate'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /v1/onboarding/acesso:
+    get:
+      tags:
+      - onboarding
+      summary: Acesso
+      operationId: acesso_v1_onboarding_acesso_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+      security:
+      - HTTPBearer: []
+  /v1/empresas:
+    post:
+      tags:
+      - empresas
+      summary: Cadastra uma empresa com codigo unico
+      operationId: cadastrar_v1_empresas_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmpresaEntrada'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empresa'
+        '409':
+          description: Codigo ja usado por outra empresa
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      security:
+      - HTTPBearer: []
+  /v1/empresas/{codigo}:
+    get:
+      tags:
+      - empresas
+      summary: Consulta uma empresa pelo codigo
+      description: 'Publico para quem esta autenticado: serve para a tela de cadastro
+        dizer se um codigo esta livre antes de enviar. Devolve apenas codigo e nome
+        -- nenhum dado de consumo.'
+      operationId: obter_v1_empresas__codigo__get
+      security:
+      - HTTPBearer: []
+      parameters:
+      - name: codigo
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Codigo
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Empresa'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
 components:
   schemas:
     Consolidado:
@@ -427,11 +525,9 @@ components:
           title: Competencia
         total_kg_co2e:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Total Kg Co2E
         mediana_kg_co2e:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Mediana Kg Co2E
         por_unidade:
           items:
@@ -448,6 +544,28 @@ components:
       description: Agregado da rede numa competencia.
     Consumo:
       properties:
+        criado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Por Uid
+        criado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Em
+          description: ISO 8601 UTC
+        atualizado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Por Uid
+        atualizado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Em
+          description: ISO 8601 UTC
         id:
           type: string
           title: Id
@@ -462,14 +580,12 @@ components:
           title: Fonte Id
         quantidade_informada:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Quantidade Informada
         unidade_informada:
           type: string
           title: Unidade Informada
         quantidade_convertida:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Quantidade Convertida
         unidade_base:
           type: string
@@ -479,11 +595,9 @@ components:
           title: Fator Versao
         fator_valor:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Fator Valor
         emissao_kg_co2e:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Emissao Kg Co2E
         escopo:
           type: string
@@ -532,7 +646,6 @@ components:
           anyOf:
           - type: number
           - type: string
-            pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Quantidade
           description: 'Texto, ex.: "1500.5"'
         unidade_medida:
@@ -549,6 +662,60 @@ components:
       - unidade_medida
       title: ConsumoEntrada
       description: Lancamento mensal de uma fonte numa unidade.
+    Empresa:
+      properties:
+        criado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Por Uid
+        criado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Em
+          description: ISO 8601 UTC
+        atualizado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Por Uid
+        atualizado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Em
+          description: ISO 8601 UTC
+        codigo:
+          type: string
+          title: Codigo
+        nome:
+          type: string
+          title: Nome
+      type: object
+      required:
+      - codigo
+      - nome
+      title: Empresa
+    EmpresaEntrada:
+      properties:
+        codigo:
+          type: string
+          maxLength: 40
+          minLength: 3
+          title: Codigo
+          description: 'Minusculas, digitos e hifen. Unico: duplicado da 409.'
+        nome:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Nome
+      type: object
+      required:
+      - codigo
+      - nome
+      title: EmpresaEntrada
+      description: Cadastro de empresa. O codigo e a identidade dela no sistema.
     Fator:
       properties:
         fonte_id:
@@ -573,11 +740,9 @@ components:
           title: Unidades Aceitas
         kg_co2e_por_unidade:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Kg Co2E Por Unidade
         teto_mensal:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Teto Mensal
           description: 'Quantidade maxima aceita num lancamento mensal, na unidade
             base. Conferido DEPOIS da conversao de unidade: 1001 MWh sao comparados
@@ -627,7 +792,6 @@ components:
           title: Unidade Nome
         emissao_kg_co2e:
           type: string
-          pattern: ^(?!^[-+.]*$)[+-]?0*\d*\.?\d*$
           title: Emissao Kg Co2E
       type: object
       required:
@@ -685,8 +849,42 @@ components:
       - total_na_pagina
       - limite
       title: Pagina[Unidade]
+    Resgate:
+      properties:
+        convite:
+          type: string
+          maxLength: 256
+          minLength: 32
+          title: Convite
+      additionalProperties: false
+      type: object
+      required:
+      - convite
+      title: Resgate
     Unidade:
       properties:
+        criado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Por Uid
+        criado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Criado Em
+          description: ISO 8601 UTC
+        atualizado_por_uid:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Por Uid
+        atualizado_em:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Atualizado Em
+          description: ISO 8601 UTC
         id:
           anyOf:
           - type: string
@@ -729,11 +927,6 @@ components:
         type:
           type: string
           title: Error Type
-        input:
-          title: Input
-        ctx:
-          type: object
-          title: Context
       type: object
       required:
       - loc

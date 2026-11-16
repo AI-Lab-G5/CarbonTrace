@@ -11,6 +11,7 @@ from app.db import colecao_do_tenant
 from app.dominio.calculo import calcular, recalcular
 from app.dominio.erros import ErroDeDominio
 from app.models import Consumo, ConsumoEntrada, Pagina
+from app.services.autoria import marcar_atualizacao
 from app.services.fatores import fator_da_versao, fator_para
 from app.services.paginacao import LIMITE_MAXIMO, LIMITE_PADRAO, fatiar
 from app.services.persistencia import (
@@ -106,8 +107,19 @@ def registrar(
         raise _erro_422(erro) from erro
 
     doc_id = _chave_natural(entrada)
-    dados = documento_de_consumo(entrada, resultado)
-    colecao_do_tenant(identidade.tenant_id, "consumos").document(doc_id).set(dados)
+    ref = colecao_do_tenant(identidade.tenant_id, "consumos").document(doc_id)
+
+    # Le o anterior antes de sobrescrever. `set` substitui o documento
+    # inteiro, entao sem isto a primeira correcao apagaria a autoria
+    # original e o lancamento passaria a parecer criado por quem
+    # corrigiu -- exatamente o que o CA-01 quer evitar.
+    anterior = ref.get()
+    dados = marcar_atualizacao(
+        documento_de_consumo(entrada, resultado),
+        identidade.uid,
+        anterior.to_dict() if anterior.exists else None,
+    )
+    ref.set(dados)
 
     return consumo_de_documento(doc_id, dados)
 

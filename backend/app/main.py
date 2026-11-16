@@ -4,7 +4,15 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
-from app.routers import consolidado, consumos, fontes, health, onboarding, unidades
+from app.routers import (
+    consolidado,
+    consumos,
+    empresas,
+    fontes,
+    health,
+    onboarding,
+    unidades,
+)
 
 app = FastAPI(
     title="CarbonTrace API",
@@ -34,3 +42,4 @@ app.include_router(fontes.router)
 app.include_router(consumos.router)
 app.include_router(consolidado.router)
 app.include_router(onboarding.router)
+app.include_router(empresas.router)
