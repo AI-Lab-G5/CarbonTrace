@@ -2,7 +2,7 @@
 
 API de inventário de emissões de GEE. FastAPI + Cloud Firestore.
 
-Versão **0.2.0** - Checkpoint 2, entrega das Jornadas 1, 2 e 3.
+Versão **0.3.0** - Checkpoint 3, entrega das Jornadas 1 a 4, autoria e código único de empresa.
 
 ## Subir tudo
 
@@ -89,7 +89,11 @@ incluindo-as por engano.
 | GET PUT | `/v1/consumos` | J2 - lançamento mensal (GET paginado, PUT idempotente) |
 | GET | `/v1/consumos/{id}` | J2 |
 | POST | `/v1/consumos/{id}/recalculo` | J3 - prova do CA-03 |
-| GET | `/v1/consolidado` | J3 - total e mediana da rede na competência |
+| GET | `/v1/consolidado` | J3 [obsoleto] - preferir `/v1/agregados` |
+| POST | `/v1/empresas` | CA-01 - cadastra empresa com código único |
+| GET | `/v1/empresas/{codigo}` | CA-01 - consulta disponibilidade de código |
+| POST | `/v1/onboarding/resgate` | Onboarding - resgate de convite |
+| GET | `/v1/onboarding/acesso` | Onboarding - tenant e papel ativos |
 
 Contrato completo em [`docs/api/openapi.yaml`](../docs/api/openapi.yaml),
 gerado a partir do código:
@@ -119,7 +123,7 @@ e os valores conferidos à mão em
 ## Testes
 
 ```bash
-pytest           # suíte completa, 182 testes, sem dependência externa
+pytest           # suíte completa, 301 testes, sem dependência externa
 ruff check .     # lint
 ```
 
@@ -133,10 +137,15 @@ rodavam na pipeline.
 | `test_dominio_numeros.py` | fronteira Decimal: float recusado, texto aceito |
 | `test_dominio_competencia.py` | formato AAAA-MM, piso 2025-01, teto no mês corrente |
 | `test_dominio_calculo.py` | a conta, a ordem das operações, o arredondamento |
-| `test_autorizacao.py` | 11 rotas × 4 cenários: sem token, expirado, papel errado, empresa errada |
+| `test_dominio_agregacao.py` | igualdade exata por unidade, região e escopo; mediana e alertas |
+| `test_autorizacao.py` | rotas protegidas × 4 cenários: sem token, expirado, papel errado, empresa errada |
 | `test_api_validacao.py` | entrada inválida barrada antes de chegar ao banco |
 | `test_api_consumos.py` | fluxo HTTP → domínio → persistência → HTTP |
+| `test_api_autoria.py` | autoria (UID e data UTC) na criação e correção de registros |
+| `test_api_empresas.py` | cadastro com código único e conflito 409 |
+| `test_api_snapshots.py` | geração idempotente, versionamento, paginação 20/100 e comparação |
 | `test_api_paginacao.py` | listas limitadas; percorrer tudo não repete nem pula item |
+| `test_convites.py` | resgate de convite e atribuição de claims |
 | `test_isolamento_tenant.py` | empresa B não lê, não lista e não escreve na empresa A |
 
 A verificação de assinatura do token é substituída nos testes, por uma persona
@@ -159,11 +168,17 @@ app/
 │   ├── unidades.py      conversão entre unidades de medida
 │   ├── competencia.py   validação de AAAA-MM
 │   ├── calculo.py       o motor: calcular, recalcular, somar, mediana
+│   ├── agregacao.py     agregados por unidade, região e escopo; comparação
 │   └── erros.py         erros de domínio com mensagem para o usuário
 ├── routers/             uma rota por recurso
 └── services/
+    ├── autoria.py       carimbo de criação/alteração e hora UTC
+    ├── convites.py      resgate de convite e claims de acesso
+    ├── empresas.py      cadastro e busca por código único
     ├── fatores.py       leitura do catálogo versionado
-    └── persistencia.py  tradução domínio ↔ documento do Firestore
+    ├── paginacao.py     paginação por cursor
+    ├── persistencia.py  tradução domínio ↔ documento do Firestore
+    └── snapshots.py     geração e leitura de snapshots imutáveis
 ```
 
 `dominio/` não importa FastAPI nem Firestore. É o que permite testar a conta
@@ -196,6 +211,38 @@ barato - `offset` paga a leitura dos documentos que descarta.
 Um cursor de outra empresa devolve 400: ele é resolvido sob o caminho de quem
 chama, onde aquele documento não existe.
 
+## Agregados e snapshots (J4)
+
+O dashboard não varre os consumos. Ele lê **snapshots**: totais por unidade,
+região, mês e escopo, gravados num momento explícito.
+
+| Método | Rota | O que faz |
+|---|---|---|
+| POST | `/v1/snapshots` | Gera o snapshot de uma competência — **a única rota que grava** |
+| GET | `/v1/snapshots` | Lista os snapshots, paginado |
+| GET | `/v1/snapshots/{id}` | Cabeçalho com totais por região e escopo |
+| GET | `/v1/snapshots/{id}/unidades` | Linhas por unidade, paginado, filtro por região |
+| GET | `/v1/snapshots/{id}/comparacao` | Ranking e desvio contra a mediana |
+| GET | `/v1/agregados?competencia=` | Atalho: a versão vigente da competência |
+
+**Leitura nunca grava.** Competência sem snapshot responde 404 com a instrução
+de gerar — não gera sozinha. Um `GET` que escreve torna o custo imprevisível e
+faz duas telas abertas disputarem o mesmo documento.
+
+**Reenviar não duplica.** Cada snapshot carrega a impressão digital do seu
+conteúdo. Gerar de novo sem mudança nos lançamentos devolve 200 com
+`criado: false` e o snapshot que já existe. Se algum lançamento mudou, nasce a
+versão seguinte e a anterior fica — snapshot nunca é editado nem apagado.
+
+Paginação dessas rotas: padrão **20**, máximo **100** (CA-07), mais apertado
+que o 50/200 das listas de J1–J3.
+
+Razão completa em
+[ADR-010](../docs/arquitetura/decisoes_adrs/0010-snapshots-de-agregados.md).
+
+O `GET /v1/consolidado` continua funcionando, marcado como obsoleto: ele
+recalcula varrendo os consumos a cada chamada, que é o custo que o J4 elimina.
+
 ## Decisões registradas
 
 Os números dos ADRs deste repositório são locais e não correspondem
@@ -205,6 +252,7 @@ automaticamente aos de `documentacao`.
 - [ADR-006](../docs/arquitetura/decisoes_adrs/0006-idempotencia-de-lancamentos.md) - idempotência dos lançamentos
 - [ADR-007](../docs/arquitetura/decisoes_adrs/0007-modelo-de-dados-multi-tenant.md) - isolamento entre empresas
 - [ADR-009](../docs/arquitetura/decisoes_adrs/0009-aritmetica-decimal-e-arredondamento.md) - aritmética decimal e arredondamento
+- [ADR-010](../docs/arquitetura/decisoes_adrs/0010-snapshots-de-agregados.md) - snapshots de agregados
 
 ## Dois detalhes que custam tempo quando esquecidos
 

@@ -11,12 +11,13 @@ from app.routers import (
     fontes,
     health,
     onboarding,
+    snapshots,
     unidades,
 )
 
 app = FastAPI(
     title="CarbonTrace API",
-    version="0.2.0",
+    version="0.3.0",
     description=(
         "Inventario de emissoes de GEE para redes de varejo e franquias.\n\n"
         "Quantidades e fatores trafegam como texto, nao como numero decimal: "
@@ -42,4 +43,5 @@ app.include_router(fontes.router)
 app.include_router(consumos.router)
 app.include_router(consolidado.router)
 app.include_router(onboarding.router)
+app.include_router(snapshots.router)
 app.include_router(empresas.router)

@@ -1,6 +1,6 @@
 [project]
 name = "carbontrace-api"
-version = "0.2.0"
+version = "0.3.0"
 description = "API de inventario de emissoes de GEE para redes de varejo"
 requires-python = ">=3.12"
 

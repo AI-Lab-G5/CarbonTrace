@@ -36,6 +36,12 @@ ROTAS_PROTEGIDAS = [
     ),
     ("POST", "/v1/consumos/abc123/recalculo", None),
     ("GET", "/v1/consolidado?competencia=2026-01", None),
+    ("POST", "/v1/snapshots", {"competencia": "2026-01"}),
+    ("GET", "/v1/snapshots", None),
+    ("GET", "/v1/snapshots/2026-01_v001", None),
+    ("GET", "/v1/snapshots/2026-01_v001/unidades", None),
+    ("GET", "/v1/snapshots/2026-01_v001/comparacao", None),
+    ("GET", "/v1/agregados?competencia=2026-01", None),
 ]
 
 ROTAS_PUBLICAS = ["/healthz", "/readyz"]

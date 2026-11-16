@@ -18,7 +18,18 @@ from app.models import Consolidado, LinhaConsolidado
 router = APIRouter(prefix="/v1/consolidado", tags=["consolidado"])
 
 
-@router.get("", response_model=Consolidado)
+@router.get(
+    "",
+    response_model=Consolidado,
+    deprecated=True,
+    summary="[Obsoleto] Consolidado calculado na leitura",
+    description=(
+        "Mantido para nao quebrar a tela atual. Recalcula varrendo os "
+        "consumos da competencia a cada chamada, que e o custo que o "
+        "CA-03 do CP3 pede para eliminar. Prefira GET /v1/agregados, "
+        "que le o snapshot ja gravado. Ver ADR-010."
+    ),
+)
 def obter(
     competencia: str = Query(description="Mes de referencia, formato AAAA-MM"),
     identidade: Identidade = Depends(funcionario_atual),

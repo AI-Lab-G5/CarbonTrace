@@ -188,6 +188,110 @@ class Consolidado(BaseModel):
     por_unidade: list[LinhaConsolidado]
 
 
+class TotalRegiaoSaida(BaseModel):
+    regiao: str = Field(description="UF da unidade, enquanto a #34 nao redefine")
+    emissao_kg_co2e: Decimal
+    unidades: int
+
+
+class TotalEscopoSaida(BaseModel):
+    escopo: Escopo
+    emissao_kg_co2e: Decimal
+
+
+class LinhaUnidade(BaseModel):
+    """Total de uma unidade dentro de um snapshot."""
+
+    unidade_id: str
+    unidade_nome: str
+    regiao: str
+    emissao_kg_co2e: Decimal
+    fontes_lancadas: int
+    unidade_ativa: bool
+    posicao: int = Field(description="Posicao no ranking, 1 = maior emissao")
+
+
+class SnapshotResumo(BaseModel):
+    """Cabecalho de um snapshot, sem as linhas por unidade."""
+
+    id: str
+    competencia: str
+    versao: int
+    gerado_em: str
+    gerado_por_uid: str
+    impressao_digital: str = Field(
+        description=(
+            "Resumo do conteudo. Gerar de novo a mesma competencia sem "
+            "mudanca nos lancamentos devolve este mesmo snapshot."
+        )
+    )
+    total_kg_co2e: Decimal
+    unidades_no_total: int
+
+
+class Snapshot(SnapshotResumo):
+    """Snapshot com os totais por regiao e por escopo.
+
+    As linhas por unidade nao vem aqui: ficam em
+    GET /v1/snapshots/{id}/unidades, paginadas, para que uma rede grande
+    nao devolva tudo numa resposta so.
+    """
+
+    por_regiao: list[TotalRegiaoSaida]
+    por_escopo: list[TotalEscopoSaida]
+
+
+class GeracaoSnapshot(BaseModel):
+    """Pedido de geracao de snapshot."""
+
+    competencia: str = Field(description="Mes de referencia, formato AAAA-MM")
+
+    @field_validator("competencia")
+    @classmethod
+    def competencia_valida(cls, v: str) -> str:
+        try:
+            return validar_competencia(v)
+        except CompetenciaInvalida as erro:
+            raise ValueError(erro.mensagem()) from erro
+
+
+class SnapshotGerado(BaseModel):
+    """Resposta da geracao.
+
+    `criado=False` com 200 significa reenvio sem mudanca nos lancamentos:
+    nenhuma versao nova nasceu e o snapshot devolvido e o que ja existia.
+    """
+
+    criado: bool
+    snapshot: Snapshot
+
+
+class LinhaComparacaoSaida(BaseModel):
+    unidade_id: str
+    unidade_nome: str
+    emissao_kg_co2e: Decimal
+    desvio_percentual: Decimal = Field(description="Contra a mediana, em %")
+    alerta: bool = Field(
+        description="Verdadeiro so quando o desvio absoluto passa de 50%"
+    )
+
+
+class ComparacaoSaida(BaseModel):
+    """Ranking e desvio contra a mediana (CA-06).
+
+    `disponivel=False` nao e erro: a rede nao tem base de comparacao.
+    O motivo acompanha para a tela poder explicar.
+    """
+
+    competencia: str
+    snapshot_id: str
+    disponivel: bool
+    motivo: str | None = None
+    mediana_kg_co2e: Decimal
+    elegiveis: int
+    linhas: list[LinhaComparacaoSaida]
+
+
 class Pagina[T](BaseModel):
     """Uma fatia de uma listagem.
 
