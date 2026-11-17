@@ -15,10 +15,11 @@ class Settings:
         self.firestore_emulator_host: str | None = os.environ.get("FIRESTORE_EMULATOR_HOST")
         self.auth_emulator_host: str | None = os.environ.get("FIREBASE_AUTH_EMULATOR_HOST")
 
-        # "emulator" aceita um cabecalho de identidade sem assinatura, para
-        # desenvolvimento local. "firebase" exige um ID token valido.
-        # Qualquer valor diferente de "emulator" e tratado como "firebase".
-        self.auth_mode: str = os.environ.get("AUTH_MODE", "emulator")
+        # Nao ha AUTH_MODE. Ate o CP1 existia um modo que aceitava a
+        # identidade num cabecalho sem assinatura; foi removido no CP2.
+        # Uma porta de desenvolvimento que o deploy pode esquecer aberta
+        # e um risco permanente, e o Auth Emulator ja cobre o caso local:
+        # emite ID token de verdade, so que localmente.
 
         self.cors_origins: list[str] = [
             origem.strip()

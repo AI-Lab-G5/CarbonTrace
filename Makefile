@@ -8,6 +8,9 @@ setup:
 up: 
 	docker compose up --build
 
+stop:
+	docker compose stop
+
 down:
 	docker compose down
 
@@ -16,6 +19,9 @@ ps:
 
 psa:
 	docker compose ps -a
+
+seed: 
+	docker compose run --rm seed
 
 # Backend: lint e testes unitários (os de emulador pulam sem FIRESTORE_EMULATOR_HOST)
 
@@ -30,4 +36,4 @@ docs-lint:
 	python3 scripts/patch_openapi.py
 	npx --yes @redocly/cli lint docs/api/openapi.yaml
 
-.PHONY: setup up down ps psa test lint-backend docs-lint
+.PHONY: setup up down ps psa seed test lint-backend docs-lint

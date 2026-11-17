@@ -3,8 +3,12 @@ name: CI
 
 on:
   push:
+    # `dev` entrou em 02/11: merge de PR para dentro dela nao dispara
+    # `pull_request` (o PR ja foi fechado) e antes tambem nao era push
+    # para a main. O PR #27 entrou na dev sem nenhum check rodar.
     branches: [main, dev]
   pull_request:
+  # Rodada manual, para reexecutar sem precisar de commit novo.
   workflow_dispatch:
 
 permissions:

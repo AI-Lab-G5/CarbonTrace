@@ -1,94 +1,126 @@
-"""Isolamento entre empresas clientes.
+"""Empresa errada: o quarto teste de autorizacao de cada rota.
 
-Requisito do Checkpoint 1: o teste precisa existir mesmo que falhe
-enquanto o sistema nao esta pronto. Ele verifica que um usuario da
-empresa A recebe 403 ou 404 ao tentar alcancar dados da empresa B.
+Precisa de dado gravado para ser verificavel -- "barrar acesso ao
+registro da empresa A" so prova alguma coisa se o registro existir.
+Por isso estes casos usam o duble de Firestore em memoria, e nao o
+conjunto puro.
 
-Para rodar e preciso o emulador do Firestore no ar:
-
-    firebase emulators:start --only firestore
-    FIRESTORE_EMULATOR_HOST=127.0.0.1:8080 pytest tests/test_isolamento_tenant.py
-
-Sem o emulador, os testes sao pulados em vez de falharem por engano --
-falha vermelha tem de significar "regra quebrada", nunca "faltou setup".
+O isolamento aqui e o da aplicacao: dado que mora sob
+/tenants/{id}/..., consultado sempre pelo caminho do tenant de quem
+chama. A segunda camada -- as regras do Firestore, que barram mesmo
+quem falasse direto com o banco -- e verificada contra o emulador pelo
+QA, na issue #24.
 """
 
-import os
-
 import pytest
-from fastapi.testclient import TestClient
 
-from app.main import app
-
-pytestmark = pytest.mark.skipif(
-    not os.environ.get("FIRESTORE_EMULATOR_HOST"),
-    reason="Requer o emulador do Firestore (FIRESTORE_EMULATOR_HOST).",
-)
-
-cliente = TestClient(app)
-
-EMPRESA_A = {"X-Debug-Uid": "ana", "X-Debug-Tenant": "empresa-a", "X-Debug-Papel": "gestor"}
-EMPRESA_B = {"X-Debug-Uid": "bruno", "X-Debug-Tenant": "empresa-b", "X-Debug-Papel": "gestor"}
+pytestmark = pytest.mark.precisa_banco
 
 
 @pytest.fixture
-def unidade_da_empresa_a() -> str:
-    resposta = cliente.post(
+def unidade_da_empresa_a(como_funcionario) -> str:
+    resposta = como_funcionario.post(
         "/v1/unidades",
-        headers=EMPRESA_A,
         json={"nome": "Loja Centro", "cidade": "Brasilia", "uf": "DF"},
     )
     assert resposta.status_code == 201
     return resposta.json()["id"]
 
 
-def test_empresa_b_nao_enxerga_unidade_da_empresa_a(unidade_da_empresa_a: str):
-    resposta = cliente.get(f"/v1/unidades/{unidade_da_empresa_a}", headers=EMPRESA_B)
-    assert resposta.status_code in (403, 404)
-
-
-def test_listagem_nao_mistura_empresas(unidade_da_empresa_a: str):
-    ids_vistos_por_b = {u["id"] for u in cliente.get("/v1/unidades", headers=EMPRESA_B).json()}
-    assert unidade_da_empresa_a not in ids_vistos_por_b
-
-
-def test_empresa_b_nao_lanca_registro_em_unidade_alheia(unidade_da_empresa_a: str):
-    resposta = cliente.put(
-        "/v1/registros",
-        headers=EMPRESA_B,
+@pytest.fixture
+def consumo_da_empresa_a(como_funcionario, unidade_da_empresa_a) -> str:
+    resposta = como_funcionario.put(
+        "/v1/consumos",
         json={
             "unidade_id": unidade_da_empresa_a,
             "competencia": "2026-01",
-            "fonte_id": "energia_eletrica_sin",
-            "quantidade": 100,
+            "fonte_id": "eletricidade",
+            "quantidade": "1500",
+            "unidade_medida": "kWh",
         },
     )
-    assert resposta.status_code in (403, 404)
+    assert resposta.status_code == 200
+    return resposta.json()["id"]
 
 
-def test_consolidado_da_empresa_b_ignora_dados_da_empresa_a(unidade_da_empresa_a: str):
-    cliente.put(
-        "/v1/registros",
-        headers=EMPRESA_A,
+# --------------------------------------------------------------------
+# Acesso por ID a recurso de outra empresa
+# --------------------------------------------------------------------
+
+
+def test_unidade_de_outra_empresa_nao_e_acessivel(
+    como_outra_empresa, unidade_da_empresa_a
+):
+    """404 e nao 403: distinguir os dois revelaria quais ids existem."""
+    resposta = como_outra_empresa.get(f"/v1/unidades/{unidade_da_empresa_a}")
+    assert resposta.status_code == 404
+
+
+def test_consumo_de_outra_empresa_nao_e_acessivel(
+    como_outra_empresa, consumo_da_empresa_a
+):
+    resposta = como_outra_empresa.get(f"/v1/consumos/{consumo_da_empresa_a}")
+    assert resposta.status_code == 404
+
+
+def test_recalculo_de_consumo_alheio_e_barrado(
+    como_outra_empresa, consumo_da_empresa_a
+):
+    resposta = como_outra_empresa.post(
+        f"/v1/consumos/{consumo_da_empresa_a}/recalculo"
+    )
+    assert resposta.status_code == 404
+
+
+# --------------------------------------------------------------------
+# Listagens nao vazam entre empresas
+# --------------------------------------------------------------------
+
+
+def test_listagem_de_unidades_nao_mistura(como_outra_empresa, unidade_da_empresa_a):
+    pagina = como_outra_empresa.get("/v1/unidades").json()
+    vistos = {u["id"] for u in pagina["itens"]}
+    assert unidade_da_empresa_a not in vistos
+
+
+def test_listagem_de_consumos_nao_mistura(como_outra_empresa, consumo_da_empresa_a):
+    pagina = como_outra_empresa.get("/v1/consumos").json()
+    vistos = {c["id"] for c in pagina["itens"]}
+    assert consumo_da_empresa_a not in vistos
+
+
+# --------------------------------------------------------------------
+# Escrita cruzada
+# --------------------------------------------------------------------
+
+
+def test_nao_lanca_consumo_em_unidade_alheia(
+    como_outra_empresa, unidade_da_empresa_a
+):
+    """O id da unidade e da empresa A; quem chama e da B.
+
+    A consulta busca a unidade sob o caminho da empresa B, nao encontra,
+    e devolve 404 -- o isolamento vem da estrutura, nao de uma checagem
+    que alguem poderia esquecer de escrever.
+    """
+    resposta = como_outra_empresa.put(
+        "/v1/consumos",
         json={
             "unidade_id": unidade_da_empresa_a,
             "competencia": "2026-01",
-            "fonte_id": "energia_eletrica_sin",
-            "quantidade": 1000,
+            "fonte_id": "eletricidade",
+            "quantidade": "100",
+            "unidade_medida": "kWh",
         },
     )
-    consolidado_b = cliente.get("/v1/consolidado?competencia=2026-01", headers=EMPRESA_B).json()
-    assert consolidado_b["total_kg_co2e"] == 0.0
+    assert resposta.status_code == 404
 
 
-def test_requisicao_sem_identidade_e_rejeitada():
-    assert cliente.get("/v1/unidades").status_code == 401
-
-
-def test_papel_leitor_nao_grava():
-    resposta = cliente.post(
-        "/v1/unidades",
-        headers={"X-Debug-Uid": "carla", "X-Debug-Tenant": "empresa-a", "X-Debug-Papel": "leitor"},
-        json={"nome": "Loja Sul", "cidade": "Brasilia", "uf": "DF"},
-    )
-    assert resposta.status_code == 403
+def test_consolidado_de_outra_empresa_ignora_dados_alheios(
+    como_outra_empresa, consumo_da_empresa_a
+):
+    consolidado = como_outra_empresa.get(
+        "/v1/consolidado?competencia=2026-01"
+    ).json()
+    assert consolidado["total_kg_co2e"] == "0.000"
+    assert consolidado["por_unidade"] == []

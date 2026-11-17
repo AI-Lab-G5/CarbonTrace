@@ -1,0 +1,711 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-04T15:56:43.958815+00:00",
+  "title": "Design System: CarbonTrace",
+  "extensions": {
+    "colorMeta": {
+      "accent": {
+        "role": "primary",
+        "displayName": "accent",
+        "canonical": "#00e599",
+        "tonalRamp": [
+          "oklch(15.0% 0.0686 160.37)",
+          "oklch(27.0% 0.1235 160.37)",
+          "oklch(38.0% 0.1738 160.37)",
+          "oklch(50.0% 0.1830 160.37)",
+          "oklch(62.0% 0.1830 160.37)",
+          "oklch(74.0% 0.1586 160.37)",
+          "oklch(85.0% 0.0915 160.37)",
+          "oklch(95.0% 0.0305 160.37)"
+        ]
+      },
+      "accent-dark": {
+        "role": "primary",
+        "displayName": "accent-dark",
+        "canonical": "#00b377",
+        "tonalRamp": [
+          "oklch(15.0% 0.0569 160.51)",
+          "oklch(27.0% 0.1025 160.51)",
+          "oklch(38.0% 0.1443 160.51)",
+          "oklch(50.0% 0.1519 160.51)",
+          "oklch(62.0% 0.1519 160.51)",
+          "oklch(74.0% 0.1316 160.51)",
+          "oklch(85.0% 0.0759 160.51)",
+          "oklch(95.0% 0.0253 160.51)"
+        ]
+      },
+      "accent-hover": {
+        "role": "primary",
+        "displayName": "accent-hover",
+        "canonical": "#33ecad",
+        "tonalRamp": [
+          "oklch(15.0% 0.0630 164.14)",
+          "oklch(27.0% 0.1135 164.14)",
+          "oklch(38.0% 0.1597 164.14)",
+          "oklch(50.0% 0.1681 164.14)",
+          "oklch(62.0% 0.1681 164.14)",
+          "oklch(74.0% 0.1457 164.14)",
+          "oklch(85.0% 0.0841 164.14)",
+          "oklch(95.0% 0.0280 164.14)"
+        ]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "bg",
+        "canonical": "#000000",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 0.00)",
+          "oklch(27.0% 0.0000 0.00)",
+          "oklch(38.0% 0.0000 0.00)",
+          "oklch(50.0% 0.0000 0.00)",
+          "oklch(62.0% 0.0000 0.00)",
+          "oklch(74.0% 0.0000 0.00)",
+          "oklch(85.0% 0.0000 0.00)",
+          "oklch(95.0% 0.0000 0.00)"
+        ]
+      },
+      "bg-soft": {
+        "role": "neutral",
+        "displayName": "bg-soft",
+        "canonical": "#0e0e0e",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 0.00)",
+          "oklch(27.0% 0.0000 0.00)",
+          "oklch(38.0% 0.0000 0.00)",
+          "oklch(50.0% 0.0000 0.00)",
+          "oklch(62.0% 0.0000 0.00)",
+          "oklch(74.0% 0.0000 0.00)",
+          "oklch(85.0% 0.0000 0.00)",
+          "oklch(95.0% 0.0000 0.00)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "card",
+        "canonical": "#141414",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 0.00)",
+          "oklch(27.0% 0.0000 0.00)",
+          "oklch(38.0% 0.0000 0.00)",
+          "oklch(50.0% 0.0000 0.00)",
+          "oklch(62.0% 0.0000 0.00)",
+          "oklch(74.0% 0.0000 0.00)",
+          "oklch(85.0% 0.0000 0.00)",
+          "oklch(95.0% 0.0000 0.00)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "line",
+        "canonical": "#262626",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 0.00)",
+          "oklch(27.0% 0.0000 0.00)",
+          "oklch(38.0% 0.0000 0.00)",
+          "oklch(50.0% 0.0000 0.00)",
+          "oklch(62.0% 0.0000 0.00)",
+          "oklch(74.0% 0.0000 0.00)",
+          "oklch(85.0% 0.0000 0.00)",
+          "oklch(95.0% 0.0000 0.00)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "text",
+        "canonical": "#f3f4f6",
+        "tonalRamp": [
+          "oklch(15.0% 0.0011 264.54)",
+          "oklch(27.0% 0.0019 264.54)",
+          "oklch(38.0% 0.0027 264.54)",
+          "oklch(50.0% 0.0029 264.54)",
+          "oklch(62.0% 0.0029 264.54)",
+          "oklch(74.0% 0.0025 264.54)",
+          "oklch(85.0% 0.0014 264.54)",
+          "oklch(95.0% 0.0005 264.54)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "muted",
+        "canonical": "#9ca3af",
+        "tonalRamp": [
+          "oklch(15.0% 0.0072 261.32)",
+          "oklch(27.0% 0.0129 261.32)",
+          "oklch(38.0% 0.0182 261.32)",
+          "oklch(50.0% 0.0192 261.32)",
+          "oklch(62.0% 0.0192 261.32)",
+          "oklch(74.0% 0.0166 261.32)",
+          "oklch(85.0% 0.0096 261.32)",
+          "oklch(95.0% 0.0032 261.32)"
+        ]
+      },
+      "landing-text-muted": {
+        "role": "neutral",
+        "displayName": "landing-text-muted",
+        "canonical": "#9eafa4",
+        "tonalRamp": [
+          "oklch(15.0% 0.0092 157.39)",
+          "oklch(27.0% 0.0166 157.39)",
+          "oklch(38.0% 0.0233 157.39)",
+          "oklch(50.0% 0.0246 157.39)",
+          "oklch(62.0% 0.0246 157.39)",
+          "oklch(74.0% 0.0213 157.39)",
+          "oklch(85.0% 0.0123 157.39)",
+          "oklch(95.0% 0.0041 157.39)"
+        ]
+      },
+      "landing-caption": {
+        "role": "neutral",
+        "displayName": "landing-caption",
+        "canonical": "#8d9b92",
+        "tonalRamp": [
+          "oklch(15.0% 0.0077 157.63)",
+          "oklch(27.0% 0.0139 157.63)",
+          "oklch(38.0% 0.0196 157.63)",
+          "oklch(50.0% 0.0206 157.63)",
+          "oklch(62.0% 0.0206 157.63)",
+          "oklch(74.0% 0.0179 157.63)",
+          "oklch(85.0% 0.0103 157.63)",
+          "oklch(95.0% 0.0034 157.63)"
+        ]
+      },
+      "landing-border": {
+        "role": "neutral",
+        "displayName": "landing-border",
+        "canonical": "#243329",
+        "tonalRamp": [
+          "oklch(15.0% 0.0101 155.31)",
+          "oklch(27.0% 0.0181 155.31)",
+          "oklch(38.0% 0.0255 155.31)",
+          "oklch(50.0% 0.0269 155.31)",
+          "oklch(62.0% 0.0269 155.31)",
+          "oklch(74.0% 0.0233 155.31)",
+          "oklch(85.0% 0.0134 155.31)",
+          "oklch(95.0% 0.0045 155.31)"
+        ]
+      },
+      "selected-bg": {
+        "role": "neutral",
+        "displayName": "selected-bg",
+        "canonical": "#0b2119",
+        "tonalRamp": [
+          "oklch(15.0% 0.0122 167.36)",
+          "oklch(27.0% 0.0219 167.36)",
+          "oklch(38.0% 0.0308 167.36)",
+          "oklch(50.0% 0.0325 167.36)",
+          "oklch(62.0% 0.0325 167.36)",
+          "oklch(74.0% 0.0281 167.36)",
+          "oklch(85.0% 0.0162 167.36)",
+          "oklch(95.0% 0.0054 167.36)"
+        ]
+      },
+      "selected-border": {
+        "role": "neutral",
+        "displayName": "selected-border",
+        "canonical": "#174d3b",
+        "tonalRamp": [
+          "oklch(15.0% 0.0243 167.31)",
+          "oklch(27.0% 0.0437 167.31)",
+          "oklch(38.0% 0.0614 167.31)",
+          "oklch(50.0% 0.0647 167.31)",
+          "oklch(62.0% 0.0647 167.31)",
+          "oklch(74.0% 0.0560 167.31)",
+          "oklch(85.0% 0.0323 167.31)",
+          "oklch(95.0% 0.0108 167.31)"
+        ]
+      },
+      "institution-bg": {
+        "role": "neutral",
+        "displayName": "institution-bg",
+        "canonical": "#0d1510",
+        "tonalRamp": [
+          "oklch(15.0% 0.0059 157.06)",
+          "oklch(27.0% 0.0107 157.06)",
+          "oklch(38.0% 0.0150 157.06)",
+          "oklch(50.0% 0.0158 157.06)",
+          "oklch(62.0% 0.0158 157.06)",
+          "oklch(74.0% 0.0137 157.06)",
+          "oklch(85.0% 0.0079 157.06)",
+          "oklch(95.0% 0.0026 157.06)"
+        ]
+      },
+      "institution-border": {
+        "role": "neutral",
+        "displayName": "institution-border",
+        "canonical": "#26382d",
+        "tonalRamp": [
+          "oklch(15.0% 0.0115 157.36)",
+          "oklch(27.0% 0.0206 157.36)",
+          "oklch(38.0% 0.0290 157.36)",
+          "oklch(50.0% 0.0305 157.36)",
+          "oklch(62.0% 0.0305 157.36)",
+          "oklch(74.0% 0.0265 157.36)",
+          "oklch(85.0% 0.0153 157.36)",
+          "oklch(95.0% 0.0051 157.36)"
+        ]
+      },
+      "topbar-bg": {
+        "role": "neutral",
+        "displayName": "topbar-bg",
+        "canonical": "rgba(0, 0, 0, 0.88)",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 0.00)",
+          "oklch(27.0% 0.0000 0.00)",
+          "oklch(38.0% 0.0000 0.00)",
+          "oklch(50.0% 0.0000 0.00)",
+          "oklch(62.0% 0.0000 0.00)",
+          "oklch(74.0% 0.0000 0.00)",
+          "oklch(85.0% 0.0000 0.00)",
+          "oklch(95.0% 0.0000 0.00)"
+        ]
+      },
+      "status-loading": {
+        "role": "info",
+        "displayName": "status-loading",
+        "canonical": "#60a5fa",
+        "tonalRamp": [
+          "oklch(15.0% 0.0538 254.62)",
+          "oklch(27.0% 0.0968 254.62)",
+          "oklch(38.0% 0.1362 254.62)",
+          "oklch(50.0% 0.1434 254.62)",
+          "oklch(62.0% 0.1434 254.62)",
+          "oklch(74.0% 0.1243 254.62)",
+          "oklch(85.0% 0.0717 254.62)",
+          "oklch(95.0% 0.0239 254.62)"
+        ]
+      },
+      "status-loading-bg": {
+        "role": "info",
+        "displayName": "status-loading-bg",
+        "canonical": "#0f172a",
+        "tonalRamp": [
+          "oklch(15.0% 0.0149 265.75)",
+          "oklch(27.0% 0.0269 265.75)",
+          "oklch(38.0% 0.0378 265.75)",
+          "oklch(50.0% 0.0398 265.75)",
+          "oklch(62.0% 0.0398 265.75)",
+          "oklch(74.0% 0.0345 265.75)",
+          "oklch(85.0% 0.0199 265.75)",
+          "oklch(95.0% 0.0066 265.75)"
+        ]
+      },
+      "status-loading-border": {
+        "role": "info",
+        "displayName": "status-loading-border",
+        "canonical": "#1e3a8a",
+        "tonalRamp": [
+          "oklch(15.0% 0.0517 265.52)",
+          "oklch(27.0% 0.0930 265.52)",
+          "oklch(38.0% 0.1309 265.52)",
+          "oklch(50.0% 0.1378 265.52)",
+          "oklch(62.0% 0.1378 265.52)",
+          "oklch(74.0% 0.1194 265.52)",
+          "oklch(85.0% 0.0689 265.52)",
+          "oklch(95.0% 0.0230 265.52)"
+        ]
+      },
+      "status-success": {
+        "role": "success",
+        "displayName": "status-success",
+        "canonical": "#00e599",
+        "tonalRamp": [
+          "oklch(15.0% 0.0686 160.37)",
+          "oklch(27.0% 0.1235 160.37)",
+          "oklch(38.0% 0.1738 160.37)",
+          "oklch(50.0% 0.1830 160.37)",
+          "oklch(62.0% 0.1830 160.37)",
+          "oklch(74.0% 0.1586 160.37)",
+          "oklch(85.0% 0.0915 160.37)",
+          "oklch(95.0% 0.0305 160.37)"
+        ]
+      },
+      "status-success-bg": {
+        "role": "success",
+        "displayName": "status-success-bg",
+        "canonical": "#052e16",
+        "tonalRamp": [
+          "oklch(15.0% 0.0236 152.93)",
+          "oklch(27.0% 0.0424 152.93)",
+          "oklch(38.0% 0.0597 152.93)",
+          "oklch(50.0% 0.0628 152.93)",
+          "oklch(62.0% 0.0628 152.93)",
+          "oklch(74.0% 0.0545 152.93)",
+          "oklch(85.0% 0.0314 152.93)",
+          "oklch(95.0% 0.0105 152.93)"
+        ]
+      },
+      "status-success-border": {
+        "role": "success",
+        "displayName": "status-success-border",
+        "canonical": "#047857",
+        "tonalRamp": [
+          "oklch(15.0% 0.0394 165.61)",
+          "oklch(27.0% 0.0708 165.61)",
+          "oklch(38.0% 0.0997 165.61)",
+          "oklch(50.0% 0.1049 165.61)",
+          "oklch(62.0% 0.1049 165.61)",
+          "oklch(74.0% 0.0909 165.61)",
+          "oklch(85.0% 0.0525 165.61)",
+          "oklch(95.0% 0.0175 165.61)"
+        ]
+      },
+      "status-error": {
+        "role": "error",
+        "displayName": "status-error",
+        "canonical": "#f87171",
+        "tonalRamp": [
+          "oklch(15.0% 0.0623 22.22)",
+          "oklch(27.0% 0.1121 22.22)",
+          "oklch(38.0% 0.1578 22.22)",
+          "oklch(50.0% 0.1661 22.22)",
+          "oklch(62.0% 0.1661 22.22)",
+          "oklch(74.0% 0.1440 22.22)",
+          "oklch(85.0% 0.0831 22.22)",
+          "oklch(95.0% 0.0277 22.22)"
+        ]
+      },
+      "status-error-bg": {
+        "role": "error",
+        "displayName": "status-error-bg",
+        "canonical": "#450a0a",
+        "tonalRamp": [
+          "oklch(15.0% 0.0332 26.04)",
+          "oklch(27.0% 0.0598 26.04)",
+          "oklch(38.0% 0.0841 26.04)",
+          "oklch(50.0% 0.0886 26.04)",
+          "oklch(62.0% 0.0886 26.04)",
+          "oklch(74.0% 0.0768 26.04)",
+          "oklch(85.0% 0.0443 26.04)",
+          "oklch(95.0% 0.0148 26.04)"
+        ]
+      },
+      "status-error-border": {
+        "role": "error",
+        "displayName": "status-error-border",
+        "canonical": "#991b1b",
+        "tonalRamp": [
+          "oklch(15.0% 0.0605 26.90)",
+          "oklch(27.0% 0.1089 26.90)",
+          "oklch(38.0% 0.1533 26.90)",
+          "oklch(50.0% 0.1613 26.90)",
+          "oklch(62.0% 0.1613 26.90)",
+          "oklch(74.0% 0.1398 26.90)",
+          "oklch(85.0% 0.0807 26.90)",
+          "oklch(95.0% 0.0269 26.90)"
+        ]
+      },
+      "google-bg": {
+        "role": "neutral",
+        "displayName": "google-bg",
+        "canonical": "#131314",
+        "tonalRamp": [
+          "oklch(15.0% 0.0008 286.20)",
+          "oklch(27.0% 0.0014 286.20)",
+          "oklch(38.0% 0.0019 286.20)",
+          "oklch(50.0% 0.0020 286.20)",
+          "oklch(62.0% 0.0020 286.20)",
+          "oklch(74.0% 0.0017 286.20)",
+          "oklch(85.0% 0.0010 286.20)",
+          "oklch(95.0% 0.0003 286.20)"
+        ]
+      },
+      "google-text": {
+        "role": "neutral",
+        "displayName": "google-text",
+        "canonical": "#e3e3e3",
+        "tonalRamp": [
+          "oklch(15.0% 0.0000 0.00)",
+          "oklch(27.0% 0.0000 0.00)",
+          "oklch(38.0% 0.0000 0.00)",
+          "oklch(50.0% 0.0000 0.00)",
+          "oklch(62.0% 0.0000 0.00)",
+          "oklch(74.0% 0.0000 0.00)",
+          "oklch(85.0% 0.0000 0.00)",
+          "oklch(95.0% 0.0000 0.00)"
+        ]
+      },
+      "google-border": {
+        "role": "neutral",
+        "displayName": "google-border",
+        "canonical": "#8e918f",
+        "tonalRamp": [
+          "oklch(15.0% 0.0017 157.12)",
+          "oklch(27.0% 0.0031 157.12)",
+          "oklch(38.0% 0.0043 157.12)",
+          "oklch(50.0% 0.0046 157.12)",
+          "oklch(62.0% 0.0046 157.12)",
+          "oklch(74.0% 0.0039 157.12)",
+          "oklch(85.0% 0.0023 157.12)",
+          "oklch(95.0% 0.0008 157.12)"
+        ]
+      },
+      "google-hover": {
+        "role": "neutral",
+        "displayName": "google-hover",
+        "canonical": "#232325",
+        "tonalRamp": [
+          "oklch(15.0% 0.0014 286.14)",
+          "oklch(27.0% 0.0025 286.14)",
+          "oklch(38.0% 0.0035 286.14)",
+          "oklch(50.0% 0.0037 286.14)",
+          "oklch(62.0% 0.0037 286.14)",
+          "oklch(74.0% 0.0032 286.14)",
+          "oklch(85.0% 0.0019 286.14)",
+          "oklch(95.0% 0.0006 286.14)"
+        ]
+      },
+      "control-border": {
+        "role": "neutral",
+        "displayName": "Contorno dos controles",
+        "canonical": "#626f66",
+        "tonalRamp": [
+          "oklch(15.0% 0.0079 155.39)",
+          "oklch(27.0% 0.0142 155.39)",
+          "oklch(38.0% 0.0199 155.39)",
+          "oklch(50.0% 0.0210 155.39)",
+          "oklch(62.0% 0.0210 155.39)",
+          "oklch(74.0% 0.0182 155.39)",
+          "oklch(85.0% 0.0105 155.39)",
+          "oklch(95.0% 0.0035 155.39)"
+        ]
+      },
+      "control-border-hover": {
+        "role": "neutral",
+        "displayName": "Contorno em interação",
+        "canonical": "#84968b",
+        "tonalRamp": [
+          "oklch(15.0% 0.0098 158.79)",
+          "oklch(27.0% 0.0176 158.79)",
+          "oklch(38.0% 0.0248 158.79)",
+          "oklch(50.0% 0.0261 158.79)",
+          "oklch(62.0% 0.0261 158.79)",
+          "oklch(74.0% 0.0227 158.79)",
+          "oklch(85.0% 0.0131 158.79)",
+          "oklch(95.0% 0.0044 158.79)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display-max": {
+        "displayName": "display-max",
+        "purpose": "Limite superior da abertura."
+      },
+      "headline-max": {
+        "displayName": "headline-max",
+        "purpose": "Limite superior de títulos públicos."
+      },
+      "workspace-title-max": {
+        "displayName": "workspace-title-max",
+        "purpose": "Limite superior do título de trabalho."
+      },
+      "body": {
+        "displayName": "body",
+        "purpose": "Texto geral."
+      },
+      "body-copy": {
+        "displayName": "body-copy",
+        "purpose": "Descrições com maior entrelinha."
+      },
+      "field-label": {
+        "displayName": "field-label",
+        "purpose": "Rótulos persistentes."
+      },
+      "action": {
+        "displayName": "action",
+        "purpose": "Botões e links de ação usam a família do corpo."
+      },
+      "landing-action": {
+        "displayName": "landing-action",
+        "purpose": "Chamadas públicas."
+      },
+      "eyebrow": {
+        "displayName": "eyebrow",
+        "purpose": "Rótulos editoriais em caixa alta."
+      },
+      "google-action": {
+        "displayName": "google-action",
+        "purpose": "Exclusiva do controle Google; fonte local."
+      }
+    },
+    "shadows": [
+      {
+        "name": "card-general",
+        "value": "0 18px 40px rgba(0,0,0,0.45)",
+        "purpose": "Card geral; removida na área de trabalho."
+      },
+      {
+        "name": "mobile-menu",
+        "value": "0 15px 30px #000a",
+        "purpose": "Menu público móvel."
+      }
+    ],
+    "motion": [
+      {
+        "name": "route-entry",
+        "value": "220ms ease; translateY(8px)",
+        "purpose": "Entrada de rotas."
+      },
+      {
+        "name": "section-reveal",
+        "value": "650ms ease; translateY(22px)",
+        "purpose": "Revelação das seções."
+      },
+      {
+        "name": "sphere",
+        "value": "8s",
+        "purpose": "Flutuação e respiração; permite pausa."
+      },
+      {
+        "name": "orbit",
+        "value": "40s",
+        "purpose": "Órbita ambiental; permite pausa."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "none",
+        "purpose": "Desativa animações e transições, preservando conteúdo visível."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "max-1050",
+        "value": "1050px"
+      },
+      {
+        "name": "max-850",
+        "value": "850px"
+      },
+      {
+        "name": "max-760",
+        "value": "760px"
+      },
+      {
+        "name": "max-560",
+        "value": "560px"
+      },
+      {
+        "name": "max-400",
+        "value": "400px"
+      },
+      {
+        "name": "max-390",
+        "value": "390px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Ação principal",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Variante existente; amostra sem envio ou navegação.",
+      "html": "<button type=\"button\" class=\"ds-btn-primary\">Entrar</button>",
+      "css": ".ds-btn-primary{display:inline-block;background:var(--accent,#00e599);color:#000;border:0;border-radius:999px;padding:.78rem 1.5rem;font-family:\"Segoe UI\",system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .18s ease,transform .18s ease;}.ds-btn-primary:hover{background:#33ecad;transform:translateY(-1px);}.ds-btn-primary:focus-visible{outline:3px solid var(--accent,#00e599);outline-offset:3px;}.ds-btn-primary:active{transform:translateY(0);}.ds-btn-primary:disabled{opacity:.6;cursor:wait;}@media(prefers-reduced-motion:reduce){.ds-btn-primary{transition:none;transform:none;}} .ds-btn-primary{min-height:44px;}"
+    },
+    {
+      "name": "Chamada pública",
+      "kind": "button",
+      "refersTo": "button-landing",
+      "description": "Variante existente; amostra sem envio ou navegação.",
+      "html": "<button type=\"button\" class=\"ds-btn-landing\">Começar agora</button>",
+      "css": ".ds-btn-landing{display:inline-block;background:var(--accent,#00e599);color:#000;border:0;border-radius:8px;padding:.9rem 1.2rem;font-family:\"Segoe UI\",system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:.95rem;font-weight:650;cursor:pointer;transition:background .18s ease,transform .18s ease;}.ds-btn-landing:hover{background:#33ecad;transform:translateY(-1px);}.ds-btn-landing:focus-visible{outline:3px solid var(--accent,#00e599);outline-offset:3px;}.ds-btn-landing:active{transform:translateY(0);}.ds-btn-landing:disabled{opacity:.6;cursor:wait;}@media(prefers-reduced-motion:reduce){.ds-btn-landing{transition:none;transform:none;}} .ds-btn-landing{min-height:44px;}"
+    },
+    {
+      "name": "Ação secundária",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "Variante existente; amostra sem envio ou navegação.",
+      "html": "<button type=\"button\" class=\"ds-btn-ghost\">Criar conta</button>",
+      "css": ".ds-btn-ghost{display:inline-block;background:transparent;color:var(--muted,#9ca3af);border:1px solid var(--control-border,#626f66);border-radius:999px;padding:.78rem 1.5rem;font-family:\"Segoe UI\",system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:.95rem;font-weight:700;cursor:pointer;transition:background .18s ease,transform .18s ease;}.ds-btn-ghost:hover{color:var(--text,#f3f4f6);border-color:var(--muted,#9ca3af);transform:translateY(-1px);}.ds-btn-ghost:focus-visible{outline:3px solid var(--accent,#00e599);outline-offset:3px;}.ds-btn-ghost:active{transform:translateY(0);}.ds-btn-ghost:disabled{opacity:.6;cursor:wait;}@media(prefers-reduced-motion:reduce){.ds-btn-ghost{transition:none;transform:none;}} .ds-btn-ghost{min-height:44px;}"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Campo com rótulo persistente, contraste reforçado e foco visível.",
+      "html": "<label class=\"ds-label\">Nome da unidade<input class=\"ds-input\" type=\"text\" autocomplete=\"organization\"></label>",
+      "css": ".ds-label{display:flex;flex-direction:column;gap:.4rem;color:var(--muted,#9ca3af);font:500 .88rem/1.55 \"Segoe UI\",system-ui,-apple-system,Roboto,Arial,sans-serif;}.ds-input{background:var(--bg-soft,#0e0e0e);color:var(--text,#f3f4f6);border:1px solid var(--control-border,#626f66);border-radius:10px;padding:.7rem .8rem;font:400 1rem/1.55 \"Segoe UI\",system-ui,-apple-system,Roboto,Arial,sans-serif;max-width:100%;}.ds-input:focus-visible{outline:3px solid var(--accent,#00e599);outline-offset:3px;} .ds-input{box-sizing:border-box;min-height:44px;} .ds-input:hover{border-color:var(--control-border-hover,#84968b);} .ds-input[aria-invalid=\"true\"]{border-color:var(--status-error,#f87171);}"
+    },
+    {
+      "name": "Navegação ativa",
+      "kind": "nav",
+      "refersTo": "nav-selected",
+      "description": "Etapa selecionada na área de trabalho.",
+      "html": "<nav aria-label=\"Área de trabalho\"><a class=\"ds-nav\" href=\"#unidades\" aria-current=\"page\"><span class=\"ds-index\">01</span><div>Unidades<small class=\"ds-small\">Locais de operação</small></div></a></nav>",
+      "css": ".ds-nav{display:flex;align-items:center;gap:.9rem;padding:.9rem 1rem;border:1px solid #174d3b;border-radius:12px;background:#0b2119;color:var(--accent,#00e599);text-decoration:none;font:600 .95rem/1.55 \"Segoe UI\",system-ui,-apple-system,Roboto,Arial,sans-serif;transition:background .18s ease;}.ds-index{font-size:.75rem;}.ds-small{display:block;font-size:.875rem;font-weight:400;margin-top:.15rem;}.ds-nav:hover{background:var(--bg-soft,#0e0e0e);}.ds-nav:focus-visible{outline:3px solid var(--accent,#00e599);outline-offset:3px;}"
+    },
+    {
+      "name": "Estado de sucesso",
+      "kind": "chip",
+      "refersTo": "badge-success",
+      "description": "Estado textual acompanhado por cor.",
+      "html": "<span class=\"ds-badge\">Concluído</span>",
+      "css": ".ds-badge{display:inline-flex;align-items:center;gap:.4rem;padding:.25rem .625rem;border:1px solid #047857;border-radius:9999px;background:#052e16;color:var(--status-success,#00e599);font:600 .78rem/1.55 \"Segoe UI\",system-ui,-apple-system,Roboto,Arial,sans-serif;}"
+    },
+    {
+      "name": "Card de trabalho",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Superfície operacional com gradiente discreto.",
+      "html": "<section class=\"ds-card\"><h2 class=\"ds-title\">Unidades</h2><p class=\"ds-copy\">Locais de operação</p></section>",
+      "css": ".ds-card{background:linear-gradient(140deg,#161a18,var(--card,#141414) 55%);color:var(--text,#f3f4f6);border:1px solid var(--line,#262626);border-radius:14px;padding:1.75rem;font:400 1rem/1.55 \"Segoe UI\",system-ui,-apple-system,Roboto,Arial,sans-serif;}.ds-title{margin:0 0 1rem;font-size:1.1rem;}.ds-copy{margin:0;color:var(--muted,#9ca3af);font-size:.9rem;}"
+    },
+    {
+      "name": "Valor de emissão",
+      "kind": "custom",
+      "refersTo": "card",
+      "description": "Valor ilustrativo; sem cálculo ou requisição.",
+      "html": "<div class=\"ds-result\"><strong class=\"ds-value\">0,00</strong><small class=\"ds-unit\">kg CO₂e</small></div>",
+      "css": ".ds-result{display:flex;align-items:baseline;gap:.6rem;font-family:\"Segoe UI\",system-ui,-apple-system,Roboto,Arial,sans-serif;}.ds-value{font-size:clamp(1.8rem,5vw,2.6rem);font-weight:800;color:var(--accent,#00e599);font-variant-numeric:tabular-nums;}.ds-unit{color:var(--muted,#9ca3af);font-size:1rem;}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Consciência em cada dado",
+    "overview": "A direção verbal vem da própria interface aprovada: tecnologia ambiental com uma presença escura, clara nas ações e humana na apresentação da equipe. O preto organiza o espaço; o verde concentra as chamadas, o foco e os destaques. A esfera com folha conecta visualmente dados e meio ambiente. Esta documentação captura o sistema existente, sem propor uma nova identidade.\n\nA apresentação pública usa títulos expressivos, respiro e ilustração. As telas de trabalho usam a mesma paleta com cards, formulários e hierarquia orientada à coleta e consulta. Essa diferença de densidade é intencional; não transforma o layout de uma página em regra de todas as telas.\n\nFotografias, nomes e links da equipe preservam a dimensão humana. As marcas da UnB e do AI Lab UnB identificam a origem da equipe. O Google mantém sua identidade própria dentro da variante escura. O painel claro para as instituições foi explicitamente substituído pelo rodapé escuro, com o texto “.lab” branco e o símbolo “A” colorido.",
+    "keyCharacteristics": [
+      "Preto como base, verde como destaque e superfícies escuras com diferenças tonais sutis.",
+      "Tipografia de sistema, títulos de abertura expressivos e informações operacionais mais compactas.",
+      "Cards de cantos suaves, ações de trabalho em cápsula e chamadas públicas com cantos discretos.",
+      "Movimento com pausa e preferência de movimento reduzido respeitada.",
+      "Equipe real, origem acadêmica visível e marcas externas reconhecíveis."
+    ],
+    "rules": [
+      {
+        "name": "The Black and Green Rule",
+        "body": "Preservar a base preta e o acento verde ao ampliar a interface. Não introduzir uma nova paleta de marca como efeito colateral de um refinamento.",
+        "section": "colors"
+      },
+      {
+        "name": "The Brand Exception Rule",
+        "body": "Manter as cores de identidade de Google, UnB e AI Lab UnB. No rodapé, a adaptação branca se aplica ao texto “.lab”; o símbolo “A” conserva suas cores.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tonal Depth Rule",
+        "body": "Em interfaces operacionais, usar a hierarquia de superfícies e bordas existente. Reservar o brilho ambiental para os elementos que já exercem esse papel na identidade.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Motion Choice Rule",
+        "body": "Conservar a pausa dos efeitos e o suporte a movimento reduzido ao reutilizar ou ampliar as animações.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "**Do** preservar preto, verde, esfera ambiental, fotos da equipe e origem na UnB/AI Lab.",
+      "**Do** usar os tokens como referência visual e conferir o contexto real antes de reutilizar uma variante.",
+      "**Do** distinguir apresentação pública, acesso e telas de trabalho pela densidade, mantendo a identidade compartilhada.",
+      "**Do** preservar o olho da senha, a identidade Google, o foco visível, o menu por teclado e as alternativas de movimento.",
+      "**Do** manter nomes, perfis, logos, avisos metodológicos e origem dos resultados fiéis aos dados existentes.",
+      "**Do** validar legibilidade, contraste e área de toque ao criar componentes novos."
+    ],
+    "donts": [
+      "**Don't** trocar a paleta ou a fonte geral durante uma correção pontual.",
+      "**Don't** recolocar um painel branco atrás das logos institucionais nem tornar o símbolo “A” monocromático.",
+      "**Don't** recolorir o “G” do Google para o verde da interface.",
+      "**Don't** remover animações, rótulos numerados ou agrupamentos apenas por um alerta genérico do detector.",
+      "**Don't** transformar limitações da captura atual em padrões a repetir.",
+      "**Don't** alterar fluxos de acesso, regras de cálculo ou fatos do projeto como parte da documentação visual."
+    ]
+  }
+}

@@ -1,0 +1,83 @@
+import { test, expect } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
+import { spawnSync } from 'node:child_process';
+const suffix = randomUUID();
+const password = randomUUID();
+const emailA = `front-a-${suffix}@example.test`;
+const emailB = `front-b-${suffix}@example.test`;
+test.beforeAll(() => {
+ const code = `import firebase_admin\nfrom firebase_admin import auth\nfirebase_admin.initialize_app(options={"projectId":"demo-carbontrace"})\nfor email,tenant in ${JSON.stringify([[emailA,'empresa-a'],[emailB,'empresa-b']])}:\n u=auth.create_user(email=email,password=${JSON.stringify(password)})\n auth.set_custom_user_claims(u.uid,{"tenant_id":tenant,"papel":"funcionario"})\n`;
+ const result = spawnSync('docker',['compose','-p','carbontrace-front-test','-f','docker-compose.yml','-f','compose.frontend-test.yml','exec','-T','backend','python','-'],{cwd:'..',input:code,encoding:'utf8',timeout:30000});
+ if(result.status !== 0) throw new Error(`Provisionamento falhou: ${result.stderr}`);
+});
+test('J1-J3 real: cadastro, consumo, recarga, fator original e logout', async ({page,request}) => {
+ await page.goto('/');
+ await page.getByRole('navigation',{name:'Navegação principal'}).getByRole('link',{name:'Entrar',exact:true}).click();
+ await page.getByLabel('E-mail').fill(emailA); await page.getByLabel('Senha').fill(password);
+ await page.getByRole('button',{name:'Entrar',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Unidades da empresa'})).toBeVisible();
+ await page.getByLabel('Nome',{exact:true}).fill(`Loja ${suffix}`);
+ await page.getByLabel('Cidade',{exact:true}).fill('Brasilia'); await page.getByLabel('UF',{exact:true}).fill('DF');
+ await page.getByRole('button',{name:'Cadastrar',exact:true}).click();
+ await expect(page.getByText('✓ Unidade cadastrada.')).toBeVisible();
+ await page.getByRole('listitem').filter({hasText:`Loja ${suffix}`}).getByRole('button',{name:'Registrar consumo →'}).click();
+ await page.getByLabel('Loja',{exact:true}).selectOption({label:`Loja ${suffix}`}, {timeout:10000});
+ await page.getByLabel('Competência',{exact:true}).fill('2025-10');
+ await page.getByLabel('Fonte',{exact:true}).selectOption('eletricidade');
+ await page.getByLabel('Quantidade',{exact:true}).fill('-1');
+ await page.getByLabel('Medida',{exact:true}).selectOption('MWh');
+ await page.getByRole('button',{name:'Salvar consumo'}).click();
+ await expect(page.getByRole('alert')).toContainText('decimal não negativa');
+ await page.getByLabel('Quantidade',{exact:true}).fill('1');
+ const responsePromise=page.waitForResponse(r=>r.url().endsWith('/v1/consumos') && r.request().method()==='PUT');
+ await page.getByRole('button',{name:'Salvar consumo'}).click();
+ const saved=await (await responsePromise).json();
+ const authA = await request.post('http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo-carbontrace-key',{data:{email:emailA,password,returnSecureToken:true}});
+ const tokenA=(await authA.json()).idToken;
+ const invalid=await request.put('/api/v1/consumos',{headers:{Authorization:`Bearer ${tokenA}`},data:{unidade_id:saved.unidade_id,competencia:'2025-10',fonte_id:'eletricidade',quantidade:'-1',unidade_medida:'MWh'}});
+ expect(invalid.status()).toBe(422);
+ const preserved=await request.get(`/api/v1/consumos/${saved.id}`,{headers:{Authorization:`Bearer ${tokenA}`}});
+ expect((await preserved.json()).emissao_kg_co2e).toBe('38.500');
+ await expect(page.getByRole('region',{name:'Resultado salvo'})).toContainText('38,500 kgCO₂e');
+ await page.reload();
+ await page.getByLabel('Loja',{exact:true}).selectOption({label:`Loja ${suffix}`}, {timeout:10000});
+ await page.getByRole('button',{name:/Eletricidade.*2025-10/}).click();
+ await page.getByText('Rastreabilidade do cálculo', {exact:false}).click();
+ await expect(page.getByRole('region',{name:'Resultado salvo'})).toContainText('v1');
+ await page.getByRole('button',{name:'Conferir cálculo original'}).click();
+ await expect(page.getByText(/Reprodução concluída/)).toBeVisible();
+ await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+ await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(0);
+ await page.screenshot({path:'../docs/frontend/evidencias/jornada-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+ await page.evaluate(()=>window.scrollTo({top:0,behavior:'instant'}));
+ await expect.poll(()=>page.evaluate(()=>window.scrollY)).toBe(0);
+ await page.screenshot({path:'../docs/frontend/evidencias/jornada-mobile.png',fullPage:true});
+ await page.getByRole('button',{name:'Sair',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Entrar no CarbonTrace'})).toBeVisible();
+ await page.getByLabel('E-mail').fill(emailB); await page.getByLabel('Senha').fill(password); await page.getByRole('button',{name:'Entrar',exact:true}).click();
+ await expect(page.getByRole('heading',{name:'Coleta mensal'})).toBeVisible();
+ await expect(page.getByText(`Loja ${suffix}`,{exact:true})).toHaveCount(0);
+ const login=await request.post('http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=demo-carbontrace-key',{data:{email:emailB,password,returnSecureToken:true}});
+ const {idToken}=await login.json();
+ const denied=await request.get(`/api/v1/consumos/${saved.id}`,{headers:{Authorization:`Bearer ${idToken}`}});
+ expect(denied.status()).toBe(404);
+});
+
+test('API indisponível oferece recuperação real', async ({page,request}) => {
+ const args=['compose','-p','carbontrace-front-test','-f','docker-compose.yml','-f','compose.frontend-test.yml'];
+ const stop=spawnSync('docker',[...args,'stop','backend'],{cwd:'..',encoding:'utf8',timeout:30000});
+ expect(stop.status).toBe(0);
+ try {
+  await page.goto('/entrar');
+  await expect(page.getByText('⚠ Indisponível',{exact:true})).toBeVisible({timeout:15000});
+  await expect(page.getByRole('button',{name:'Tentar novamente',exact:true})).toBeVisible();
+ } finally {
+  const start=spawnSync('docker',[...args,'start','backend'],{cwd:'..',encoding:'utf8',timeout:30000});
+  expect(start.status).toBe(0);
+ }
+ await expect.poll(async()=> (await request.get('/api/readyz')).status(),{timeout:30000}).toBe(200);
+ await page.getByRole('button',{name:'Tentar novamente',exact:true}).click();
+ await expect(page.getByText('Pronta',{exact:true})).toBeVisible();
+});
