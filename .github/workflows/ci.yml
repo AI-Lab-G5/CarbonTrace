@@ -3,8 +3,12 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, dev]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   # Lint do contrato OpenAPI (gerado pelo backend, normalizado antes do lint)
@@ -78,6 +82,10 @@ jobs:
         run: npm run lint
         working-directory: frontend
 
+      - name: Testes frontend
+        run: npm test
+        working-directory: frontend
+
   build-frontend:
     runs-on: ubuntu-latest
     needs: lint-frontend
@@ -97,3 +105,171 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: frontend
+        env:
+          VITE_AUTH_MODE: ${{ vars.VITE_AUTH_MODE }}
+          VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+
+      - name: Identificar versão publicada
+        working-directory: frontend
+        run: |
+          node -e "require('fs').writeFileSync('dist/version.json', JSON.stringify({sha: process.env.GITHUB_SHA}))"
+
+      - name: Guardar build para publicação
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          if-no-files-found: error
+          retention-days: 7
+
+  deny-all:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Java (exigido pelo emulador do Firestore)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Instala dependencias do backend
+        run: pip install -r backend/requirements.txt
+
+      - name: Instala Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Sobe Auth e Firestore Emulator
+        run: |
+          # Sai do diretorio raiz porque firebase.json e as rules vivem em
+          # firebase/. O `cd` fica dentro do passo: `working-directory`
+          # mudaria o cwd so deste passo, mas o processo em background
+          # precisa continuar rodando depois que o passo termina.
+          cd firebase
+          firebase emulators:start --only auth,firestore --project demo-carbontrace &
+          # Espera as portas 8080 (Firestore) e 9099 (Auth) responderem.
+          # "processo iniciado" nao e o mesmo que "pronto para responder",
+          # e um sleep fixo erra tanto para mais quanto para menos.
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8080/ > /dev/null 2>&1 \
+               && curl -fsS http://127.0.0.1:9099/ > /dev/null 2>&1; then
+              echo "Emuladores prontos apos ${i}s"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Emuladores nao subiram em 60s"
+          exit 1
+
+      - name: Cria contas de demonstracao
+        run: python backend/scripts/seed_contas.py
+        env:
+          FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
+          FIREBASE_PROJECT_ID: demo-carbontrace
+
+      - name: Semeia fatores e unidades
+        run: python backend/scripts/seed.py
+        env:
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+          FIREBASE_PROJECT_ID: demo-carbontrace
+
+      - name: Prova deny-all das Security Rules
+        run: pytest qa/test_deny_all.py -v
+        env:
+          FIREBASE_EMULATOR_HOST: 127.0.0.1:8080
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+          FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
+          FIREBASE_PROJECT_ID: demo-carbontrace
+
+  hosting:
+    name: Publicar Firebase Hosting
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - test-backend
+      - lint-frontend
+      - build-frontend
+      - deny-all
+
+    if: >-
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/main')
+
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
+    concurrency:
+      group: hosting-${{ github.event.pull_request.number || 'production' }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Recuperar build aprovado
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+
+      - name: Publicar preview e comentar no PR
+        id: preview
+        if: github.event_name == 'pull_request'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CARBONTRACE_C6FD6 }}
+          projectId: carbontrace-c6fd6
+          entryPoint: firebase
+          expires: 7d
+
+      - name: Publicar produção
+        if: github.event_name == 'push'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CARBONTRACE_C6FD6 }}
+          projectId: carbontrace-c6fd6
+          entryPoint: firebase
+          channelId: live
+
+      - name: Smoke do frontend publicado
+        env:
+          DEPLOY_URL: ${{ steps.preview.outputs.details_url || 'https://carbontrace-c6fd6.web.app' }}
+        run: |
+          curl --fail --silent --show-error \
+            --retry 5 --retry-delay 5 --max-time 20 \
+            "$DEPLOY_URL/" -o /dev/null
+
+          curl --fail --silent --show-error \
+            --retry 5 --retry-delay 5 --max-time 20 \
+            "$DEPLOY_URL/version.json?sha=$GITHUB_SHA" \
+            -o /tmp/hosting-version.json
+
+          node -e "
+            const fs = require('fs');
+            const version = JSON.parse(
+              fs.readFileSync('/tmp/hosting-version.json', 'utf8')
+            );
+            if (version.sha !== process.env.GITHUB_SHA) {
+              throw new Error('A versão publicada difere do commit esperado');
+            }
+            console.log('Smoke aprovado para o commit:', version.sha);
+          "
