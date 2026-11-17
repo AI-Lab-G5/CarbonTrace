@@ -232,7 +232,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: frontend-dist
-          path: frontend/dist
+          path: firebase/dist
 
       - name: Publicar preview e comentar no PR
         id: preview
