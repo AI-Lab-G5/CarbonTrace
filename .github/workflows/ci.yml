@@ -254,28 +254,52 @@ jobs:
           entryPoint: firebase
           channelId: live
 
-      - name: Smoke do frontend publicado
+            - name: Smoke do frontend publicado
+        timeout-minutes: 4
         env:
           DEPLOY_URL: ${{ steps.preview.outputs.details_url || 'https://carbontrace-c6fd6.web.app' }}
         run: |
-          curl --fail --silent --show-error \
-            --retry 12 --retry-delay 5 --retry-max-time 120 \
-            --retry-all-errors --max-time 20 \
-            "$DEPLOY_URL/" -o /dev/null
+          node --input-type=module <<'NODE'
+          const base = process.env.DEPLOY_URL.replace(/\/$/, '');
+          const expected = process.env.GITHUB_SHA;
+          const deadline = Date.now() + 180_000;
+          let attempt = 0;
 
-          curl --fail --silent --show-error \
-            --retry 12 --retry-delay 5 --retry-max-time 120 \
-            --retry-all-errors --max-time 20 \
-            "$DEPLOY_URL/version.json?sha=$GITHUB_SHA" \
-            -o /tmp/hosting-version.json
+          while (Date.now() < deadline) {
+            attempt++;
+            try {
+              const query = `smoke=${expected}-${Date.now()}`;
+              const options = () => ({
+                signal: AbortSignal.timeout(10_000),
+                headers: { 'Cache-Control': 'no-cache' },
+              });
 
-          node -e "
-            const fs = require('fs');
-            const version = JSON.parse(
-              fs.readFileSync('/tmp/hosting-version.json', 'utf8')
-            );
-            if (version.sha !== process.env.GITHUB_SHA) {
-              throw new Error('A versão publicada difere do commit esperado');
+              const [home, version] = await Promise.all([
+                fetch(`${base}/?${query}`, options()),
+                fetch(`${base}/version.json?${query}`, options()),
+              ]);
+
+              console.log(
+                `Tentativa ${attempt}: página=${home.status}, versão=${version.status}`
+              );
+
+              if (!home.ok || !version.ok) {
+                throw new Error('Hosting ainda não respondeu com sucesso');
+              }
+
+              const data = await version.json();
+              if (data.sha !== expected) {
+                throw new Error(`Versão recebida: ${data.sha}; esperada: ${expected}`);
+              }
+
+              console.log(`Smoke aprovado para o commit: ${expected}`);
+              process.exit(0);
+            } catch (error) {
+              console.log(`Aguardando publicação: ${error.message}`);
             }
-            console.log('Smoke aprovado para o commit:', version.sha);
-          "
+
+            await new Promise(resolve => setTimeout(resolve, 5_000));
+          }
+
+          throw new Error('Smoke falhou: versão esperada indisponível após 3 minutos');
+          NODE
