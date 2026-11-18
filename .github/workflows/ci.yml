@@ -254,7 +254,7 @@ jobs:
           entryPoint: firebase
           channelId: live
 
-            - name: Smoke do frontend publicado
+      - name: Smoke do frontend publicado
         timeout-minutes: 4
         env:
           DEPLOY_URL: ${{ steps.preview.outputs.details_url || 'https://carbontrace-c6fd6.web.app' }}
