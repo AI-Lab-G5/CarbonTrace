@@ -94,6 +94,14 @@ npm run lint
 npm run build
 ```
 
+### Publicação do frontend pelo GitHub Actions
+
+Para publicar a aplicação, configure as variáveis de repositório `VITE_AUTH_MODE` (valor `firebase`), `VITE_FIREBASE_PROJECT_ID`, `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN` e `VITE_API_BASE_URL` (URL HTTPS). O push em `main` usa esses valores para produção.
+
+Para habilitar o preview interativo dos PRs, configure as mesmas cinco variáveis com o prefixo `PREVIEW_`, por exemplo `PREVIEW_VITE_API_BASE_URL`. Use a API de homologação, com Auth e Firestore de um projeto Firebase próprio. Autorize a origem do canal de preview no CORS dessa API e no Firebase Auth de homologação para o login Google.
+
+Se as cinco variáveis de preview estiverem ausentes, o CI testa o build e publica apenas um aviso estático no canal do PR. Uma configuração parcial ou que reutilize a API ou o projeto Firebase de produção interrompe a publicação.
+
 ## Escopo e planejamento vigentes (25/10/2026)
 
 O alvo aprovado é um CRUD de consumos para um único perfil funcionario, com login individual e acesso às unidades da própria empresa. Fontes: eletricidade, diesel, gasolina e GLP; eletricidade kWh/MWh, diesel/gasolina L e GLP kg. Gás natural e resíduos/Escopo 3 presentes no seed antigo não fazem parte do catálogo aprovado.

@@ -47,6 +47,23 @@ ROTAS_PROTEGIDAS = [
 ROTAS_PUBLICAS = ["/healthz", "/readyz"]
 
 
+@pytest.mark.parametrize(
+    "firestore,auth,esperado",
+    [
+        (None, None, False),
+        (None, "localhost:9099", True),
+        ("localhost:8080", None, True),
+        ("localhost:8080", "localhost:9099", True),
+    ],
+)
+def test_healthz_informa_uso_de_qualquer_emulador(cliente, monkeypatch, firestore, auth, esperado):
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "firestore_emulator_host", firestore)
+    monkeypatch.setattr(settings, "auth_emulator_host", auth)
+    assert cliente.get("/healthz").json()["emulador"] is esperado
+
+
 def _chamar(cliente: TestClient, metodo: str, caminho: str, corpo):
     return cliente.request(metodo, caminho, json=corpo)
 

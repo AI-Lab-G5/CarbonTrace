@@ -29,7 +29,7 @@ class Settings:
 
     @property
     def usando_emulador(self) -> bool:
-        return self.firestore_emulator_host is not None
+        return self.firestore_emulator_host is not None or self.auth_emulator_host is not None
 
 
 settings = Settings()

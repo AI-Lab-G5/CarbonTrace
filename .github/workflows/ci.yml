@@ -14,6 +14,10 @@ on:
 permissions:
   contents: read
 
+env:
+  HOSTING_PROJECT: carbontrace-c6fd6
+  RENDER_API_URL: https://carbontrace-api-tyn2.onrender.com
+
 jobs:
   # Lint do contrato OpenAPI (gerado pelo backend, normalizado antes do lint)
   lint:
@@ -93,6 +97,11 @@ jobs:
   build-frontend:
     runs-on: ubuntu-latest
     needs: lint-frontend
+    env:
+      CONFIG_PREFIX: ${{ github.event_name == 'pull_request' && 'PREVIEW_' || '' }}
+      HOSTING_TARGET: >-
+        ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && 'preview' ||
+            github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production' || 'ci' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -107,25 +116,32 @@ jobs:
         working-directory: frontend
 
       - name: Build
-        run: npm run build
+        id: build
+        run: |
+          node ../.github/scripts/prepare-hosting.mjs
+          npm run build
         working-directory: frontend
         env:
-          VITE_AUTH_MODE: ${{ vars.VITE_AUTH_MODE }}
-          VITE_FIREBASE_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
-          VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+          VITE_AUTH_MODE: ${{ vars[format('{0}VITE_AUTH_MODE', env.CONFIG_PREFIX)] }}
+          VITE_FIREBASE_PROJECT_ID: ${{ vars[format('{0}VITE_FIREBASE_PROJECT_ID', env.CONFIG_PREFIX)] }}
+          VITE_FIREBASE_API_KEY: ${{ vars[format('{0}VITE_FIREBASE_API_KEY', env.CONFIG_PREFIX)] }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars[format('{0}VITE_FIREBASE_AUTH_DOMAIN', env.CONFIG_PREFIX)] }}
+          VITE_API_BASE_URL: ${{ vars[format('{0}VITE_API_BASE_URL', env.CONFIG_PREFIX)] }}
+          PRODUCTION_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+          PRODUCTION_API_URL: ${{ vars.VITE_API_BASE_URL }}
+          PRODUCTION_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+          PRODUCTION_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
 
       - name: Identificar versão publicada
-        working-directory: frontend
+        working-directory: frontend/${{ steps.build.outputs.directory }}
         run: |
-          node -e "require('fs').writeFileSync('dist/version.json', JSON.stringify({sha: process.env.GITHUB_SHA}))"
+          node -e "require('fs').writeFileSync('version.json', JSON.stringify({sha: process.env.GITHUB_SHA}))"
 
       - name: Guardar build para publicação
         uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
-          path: frontend/dist
+          path: frontend/${{ steps.build.outputs.directory }}
           if-no-files-found: error
           retention-days: 7
 
@@ -219,6 +235,7 @@ jobs:
     concurrency:
       group: hosting-${{ github.event.pull_request.number || 'production' }}
       cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+      queue: ${{ github.event_name == 'push' && 'max' || 'single' }}
 
     steps:
       - name: Checkout
@@ -242,20 +259,28 @@ jobs:
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CARBONTRACE_C6FD6 }}
-          projectId: carbontrace-c6fd6
+          projectId: ${{ env.HOSTING_PROJECT }}
           entryPoint: firebase
           expires: 7d
 
-      - name: Publicar produção
+      - name: Conferir commit atual de main
+        id: main
         if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/current-main.sh
+
+      - name: Publicar produção
+        if: steps.main.outputs.current == 'true'
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CARBONTRACE_C6FD6 }}
-          projectId: carbontrace-c6fd6
+          projectId: ${{ env.HOSTING_PROJECT }}
           entryPoint: firebase
           channelId: live
 
       - name: Smoke do frontend publicado
+        if: github.event_name == 'pull_request' || steps.main.outputs.current == 'true'
         timeout-minutes: 4
         env:
           DEPLOY_URL: ${{ steps.preview.outputs.details_url || 'https://carbontrace-c6fd6.web.app' }}
@@ -326,21 +351,30 @@ jobs:
     concurrency:
       group: render-production
       cancel-in-progress: false
+      queue: max
 
     steps:
+      - uses: actions/checkout@v4
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: '24'
 
+      - name: Conferir commit atual de main
+        id: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/current-main.sh
+
       - name: Publicar e verificar API
+        if: steps.main.outputs.current == 'true'
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
-          API_URL: https://carbontrace-api-tyn2.onrender.com
         run: |
           node --input-type=module <<'NODE'
           const expected = process.env.GITHUB_SHA;
-          const base = process.env.API_URL;
+          const base = process.env.RENDER_API_URL;
           const secret = process.env.RENDER_DEPLOY_HOOK;
 
           if (!secret) {
