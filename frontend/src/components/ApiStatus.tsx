@@ -17,7 +17,7 @@ interface ApiStatusProps {
   onStatusChange?: (status: ApiStatusState) => void;
 }
 
-export function ApiStatus({ apiBaseUrl = '/api', onStatusChange }: ApiStatusProps) {
+export function ApiStatus({ apiBaseUrl = import.meta.env.VITE_API_BASE_URL || '/api', onStatusChange }: ApiStatusProps) {
   const [status, setStatus] = useState<ApiStatusState>({ state: 'loading' });
   const [retryKey, setRetryKey] = useState<number>(0);
 
