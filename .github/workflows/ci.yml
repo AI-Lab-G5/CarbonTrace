@@ -203,6 +203,7 @@ jobs:
       - lint-frontend
       - build-frontend
       - deny-all
+      - gitleaks
 
     if: >-
       (github.event_name == 'pull_request' &&
@@ -315,6 +316,7 @@ jobs:
       - lint-frontend
       - build-frontend
       - deny-all
+      - gitleaks
 
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
@@ -409,3 +411,45 @@ jobs:
 
           throw new Error('Deploy não ficou saudável na versão esperada em 15 minutos');
           NODE
+
+  gitleaks:
+    name: Verificar segredos
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout com histórico completo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Instalar e executar Gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tool_dir="$RUNNER_TEMP/gitleaks"
+          mkdir -p "$tool_dir"
+
+          curl --fail --silent --show-error --location \
+            --retry 3 --max-time 120 \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            -o "$tool_dir/gitleaks.tar.gz"
+
+          printf '%s  %s\n' \
+            '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb' \
+            "$tool_dir/gitleaks.tar.gz" | sha256sum --check -
+
+          tar -xzf "$tool_dir/gitleaks.tar.gz" \
+            -C "$tool_dir" gitleaks
+
+          "$tool_dir/gitleaks" git \
+            --redact=100 \
+            --verbose \
+            --exit-code 1 \
+            --log-opts="--all" \
+            .
