@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+from app.observabilidade import registrar_requisicao
 from app.routers import (
     consolidado,
     consumos,
@@ -36,6 +37,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.middleware("http")(registrar_requisicao)
 
 app.include_router(health.router)
 app.include_router(unidades.router)
