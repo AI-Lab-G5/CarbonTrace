@@ -382,3 +382,32 @@ def test_mediana_de_numero_par_de_unidades():
         ]
     )
     assert comp.mediana_kg_co2e == Decimal("250.000")
+
+
+@pytest.mark.parametrize(
+    "menor,maior,alerta_menor,alerta_maior",
+    [
+        ("50.001", "149.999", False, False),
+        ("50.000", "150.000", False, False),
+        ("49.999", "150.001", True, True),
+        ("50.000", "150.001", False, True),
+        ("49.999", "150.000", True, False),
+    ],
+)
+def test_alerta_usa_desvio_sem_arredondamento(
+    menor, maior, alerta_menor, alerta_maior
+):
+    comp = comparar(
+        [
+            _total("a", menor),
+            _total("b", "100.000"),
+            _total("c", maior),
+        ]
+    )
+    assert comp.disponivel is True
+    assert comp.mediana_kg_co2e == Decimal("100.000")
+
+    por_id = {linha.unidade_id: linha for linha in comp.linhas}
+    assert por_id["a"].alerta is alerta_menor
+    assert por_id["b"].alerta is False
+    assert por_id["c"].alerta is alerta_maior
