@@ -14,6 +14,10 @@ on:
 permissions:
   contents: read
 
+env:
+  HOSTING_PROJECT: carbontrace-c6fd6
+  RENDER_API_URL: https://carbontrace-api-tyn2.onrender.com
+
 jobs:
   # Lint do contrato OpenAPI (gerado pelo backend, normalizado antes do lint)
   lint:
@@ -30,7 +34,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
 
       - name: Instalar dependências de documentação
         run: pip install pyyaml
@@ -74,7 +78,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -93,12 +97,17 @@ jobs:
   build-frontend:
     runs-on: ubuntu-latest
     needs: lint-frontend
+    env:
+      CONFIG_PREFIX: ${{ github.event_name == 'pull_request' && 'PREVIEW_' || '' }}
+      HOSTING_TARGET: >-
+        ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && 'preview' ||
+            github.event_name == 'push' && github.ref == 'refs/heads/main' && 'production' || 'ci' }}
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
           cache-dependency-path: frontend/package-lock.json
 
@@ -107,8 +116,34 @@ jobs:
         working-directory: frontend
 
       - name: Build
-        run: npm run build
+        id: build
+        run: |
+          node ../.github/scripts/prepare-hosting.mjs
+          npm run build
         working-directory: frontend
+        env:
+          VITE_AUTH_MODE: ${{ vars[format('{0}VITE_AUTH_MODE', env.CONFIG_PREFIX)] }}
+          VITE_FIREBASE_PROJECT_ID: ${{ vars[format('{0}VITE_FIREBASE_PROJECT_ID', env.CONFIG_PREFIX)] }}
+          VITE_FIREBASE_API_KEY: ${{ vars[format('{0}VITE_FIREBASE_API_KEY', env.CONFIG_PREFIX)] }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ vars[format('{0}VITE_FIREBASE_AUTH_DOMAIN', env.CONFIG_PREFIX)] }}
+          VITE_API_BASE_URL: ${{ vars[format('{0}VITE_API_BASE_URL', env.CONFIG_PREFIX)] }}
+          PRODUCTION_PROJECT_ID: ${{ vars.VITE_FIREBASE_PROJECT_ID }}
+          PRODUCTION_API_URL: ${{ vars.VITE_API_BASE_URL }}
+          PRODUCTION_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
+          PRODUCTION_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
+
+      - name: Identificar versão publicada
+        working-directory: frontend/${{ steps.build.outputs.directory }}
+        run: |
+          node -e "require('fs').writeFileSync('version.json', JSON.stringify({sha: process.env.GITHUB_SHA}))"
+
+      - name: Guardar build para publicação
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/${{ steps.build.outputs.directory }}
+          if-no-files-found: error
+          retention-days: 7
 
   deny-all:
     runs-on: ubuntu-latest
@@ -174,3 +209,281 @@ jobs:
           FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
           FIREBASE_AUTH_EMULATOR_HOST: 127.0.0.1:9099
           FIREBASE_PROJECT_ID: demo-carbontrace
+
+  hosting:
+    name: Publicar Firebase Hosting
+    runs-on: ubuntu-latest
+    needs:
+      - lint
+      - test-backend
+      - lint-frontend
+      - build-frontend
+      - deny-all
+      - gitleaks
+
+    if: >-
+      (github.event_name == 'pull_request' &&
+       github.event.pull_request.head.repo.full_name == github.repository) ||
+      (github.event_name == 'push' &&
+       github.ref == 'refs/heads/main')
+
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+
+    concurrency:
+      group: hosting-${{ github.event.pull_request.number || 'production' }}
+      cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+      queue: ${{ github.event_name == 'push' && 'max' || 'single' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Recuperar build aprovado
+        uses: actions/download-artifact@v4
+        with:
+          name: frontend-dist
+          path: firebase/dist
+
+      - name: Publicar preview e comentar no PR
+        id: preview
+        if: github.event_name == 'pull_request'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CARBONTRACE_C6FD6 }}
+          projectId: ${{ env.HOSTING_PROJECT }}
+          entryPoint: firebase
+          expires: 7d
+
+      - name: Conferir commit atual de main
+        id: main
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/current-main.sh
+
+      - name: Publicar produção
+        if: steps.main.outputs.current == 'true'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CARBONTRACE_C6FD6 }}
+          projectId: ${{ env.HOSTING_PROJECT }}
+          entryPoint: firebase
+          channelId: live
+
+      - name: Smoke do frontend publicado
+        if: github.event_name == 'pull_request' || steps.main.outputs.current == 'true'
+        timeout-minutes: 4
+        env:
+          DEPLOY_URL: ${{ steps.preview.outputs.details_url || 'https://carbontrace-c6fd6.web.app' }}
+        run: |
+          node --input-type=module <<'NODE'
+          const base = process.env.DEPLOY_URL.replace(/\/$/, '');
+          const expected = process.env.GITHUB_SHA;
+          const deadline = Date.now() + 180_000;
+          let attempt = 0;
+
+          while (Date.now() < deadline) {
+            attempt++;
+            try {
+              const query = `smoke=${expected}-${Date.now()}`;
+              const options = () => ({
+                signal: AbortSignal.timeout(10_000),
+                headers: { 'Cache-Control': 'no-cache' },
+              });
+
+              const [home, version] = await Promise.all([
+                fetch(`${base}/?${query}`, options()),
+                fetch(`${base}/version.json?${query}`, options()),
+              ]);
+
+              console.log(
+                `Tentativa ${attempt}: página=${home.status}, versão=${version.status}`
+              );
+
+              if (!home.ok || !version.ok) {
+                throw new Error('Hosting ainda não respondeu com sucesso');
+              }
+
+              const data = await version.json();
+              if (data.sha !== expected) {
+                throw new Error(`Versão recebida: ${data.sha}; esperada: ${expected}`);
+              }
+
+              console.log(`Smoke aprovado para o commit: ${expected}`);
+              process.exit(0);
+            } catch (error) {
+              console.log(`Aguardando publicação: ${error.message}`);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 5_000));
+          }
+
+          throw new Error('Smoke falhou: versão esperada indisponível após 3 minutos');
+          NODE
+
+  render:
+    name: Publicar API no Render
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    needs:
+      - lint
+      - test-backend
+      - lint-frontend
+      - build-frontend
+      - deny-all
+      - gitleaks
+
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: read
+
+    concurrency:
+      group: render-production
+      cancel-in-progress: false
+      queue: max
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Conferir commit atual de main
+        id: main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/current-main.sh
+
+      - name: Publicar e verificar API
+        if: steps.main.outputs.current == 'true'
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          node --input-type=module <<'NODE'
+          const expected = process.env.GITHUB_SHA;
+          const base = process.env.RENDER_API_URL;
+          const secret = process.env.RENDER_DEPLOY_HOOK;
+
+          if (!secret) {
+            throw new Error('Secret RENDER_DEPLOY_HOOK não configurado');
+          }
+
+          const hook = new URL(secret);
+          hook.searchParams.set('ref', expected);
+
+          let trigger;
+          try {
+            trigger = await fetch(hook, {
+              method: 'POST',
+              signal: AbortSignal.timeout(30_000),
+            });
+          } catch {
+            throw new Error('Não foi possível confirmar o disparo do deploy');
+          }
+
+          if (!trigger.ok) {
+            throw new Error(`Render recusou o deploy: HTTP ${trigger.status}`);
+          }
+
+          console.log(`Deploy solicitado para o commit ${expected}`);
+          const deadline = Date.now() + 15 * 60_000;
+
+          while (Date.now() < deadline) {
+            try {
+              const options = () => ({
+                signal: AbortSignal.timeout(10_000),
+                headers: { 'Cache-Control': 'no-cache' },
+              });
+              const query = `smoke=${Date.now()}`;
+              const health = await fetch(
+                `${base}/healthz?${query}`, options()
+              );
+
+              if (!health.ok) {
+                throw new Error(`Health: HTTP ${health.status}`);
+              }
+
+              const data = await health.json();
+
+              if (data.commit !== expected) {
+                throw new Error('A versão esperada ainda não está disponível');
+              }
+
+              if (data.status !== 'ok' || data.emulador !== false) {
+                throw new Error('Saúde ou configuração de produção inválida');
+              }
+
+              const ready = await fetch(
+                `${base}/readyz?${query}`, options()
+              );
+
+              if (!ready.ok || (await ready.json()).status !== 'pronto') {
+                throw new Error('Firestore ainda não está pronto');
+              }
+
+              console.log(`Smoke da API aprovado: ${expected}`);
+              process.exit(0);
+            } catch (error) {
+              console.log(`Aguardando API: ${error.message}`);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 10_000));
+          }
+
+          throw new Error('Deploy não ficou saudável na versão esperada em 15 minutos');
+          NODE
+
+  gitleaks:
+    name: Verificar segredos
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout com histórico completo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Instalar e executar Gitleaks
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tool_dir="$RUNNER_TEMP/gitleaks"
+          mkdir -p "$tool_dir"
+
+          curl --fail --silent --show-error --location \
+            --retry 3 --max-time 120 \
+            https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz \
+            -o "$tool_dir/gitleaks.tar.gz"
+
+          printf '%s  %s\n' \
+            '551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb' \
+            "$tool_dir/gitleaks.tar.gz" | sha256sum --check -
+
+          tar -xzf "$tool_dir/gitleaks.tar.gz" \
+            -C "$tool_dir" gitleaks
+
+          "$tool_dir/gitleaks" git \
+            --redact=100 \
+            --verbose \
+            --exit-code 1 \
+            --log-opts="--all" \
+            .

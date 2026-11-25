@@ -6,6 +6,7 @@
 *firebase-adminsdk*.json
 serviceAccountKey.json
 *-key.json
+*.chave*
 
 # Python
 __pycache__/

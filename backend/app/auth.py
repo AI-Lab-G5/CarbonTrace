@@ -14,7 +14,7 @@ precisamos provar e a nossa autorizacao.
 from dataclasses import dataclass
 from typing import Literal
 
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 Papel = Literal["funcionario"]
@@ -99,6 +99,7 @@ def identidade_atual(claims: dict = Depends(claims_do_token)) -> Identidade:
 
 
 def funcionario_atual(
+    request: Request,
     identidade: Identidade = Depends(identidade_atual),
 ) -> Identidade:
     """Dependencia padrao das rotas de negocio.
@@ -107,4 +108,5 @@ def funcionario_atual(
     ponto de extensao pronto para quando houver mais de um perfil --
     sem mexer em todas as rotas de novo.
     """
+    request.state.tenant_id = identidade.tenant_id
     return identidade

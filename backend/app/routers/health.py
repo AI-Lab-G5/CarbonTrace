@@ -10,6 +10,8 @@ orquestrador reiniciar a aplicacao quando quem caiu foi o banco, e o
 reinicio nao conserta nada.
 """
 
+import os
+
 from fastapi import APIRouter, Response, status
 
 from app.config import settings
@@ -34,6 +36,7 @@ def healthz() -> dict:
         "status": "ok",
         "servico": "carbontrace-api",
         "emulador": settings.usando_emulador,
+        "commit": os.environ.get("RENDER_GIT_COMMIT"),
     }
 
 
@@ -57,8 +60,7 @@ def readyz(resposta: Response) -> dict:
     try:
         # Leitura minima: existe ou nao existe, nao importa o conteudo.
         get_db().collection("fatores").limit(1).get()
-    except Exception as erro:  # noqa: BLE001 - qualquer falha vale como nao-pronto
+    except Exception:  # noqa: BLE001 - qualquer falha vale como nao-pronto
         resposta.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        return {"status": "indisponivel", "dependencia": "firestore", "erro": str(erro)}
-
+        return {"status": "indisponivel", "dependencia": "firestore"}
     return {"status": "pronto", "dependencia": "firestore"}
