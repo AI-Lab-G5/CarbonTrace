@@ -17,6 +17,8 @@ from typing import Literal
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from app.config import settings
+
 Papel = Literal["funcionario"]
 
 PAPEIS_VALIDOS: frozenset[str] = frozenset({"funcionario"})
@@ -58,7 +60,9 @@ def claims_do_token(
     from firebase_admin import auth as fb_auth
 
     if not firebase_admin._apps:
-        firebase_admin.initialize_app()
+        firebase_admin.initialize_app(
+            options={"projectId": settings.project_id}
+        )
 
     try:
         return fb_auth.verify_id_token(credenciais.credentials)
