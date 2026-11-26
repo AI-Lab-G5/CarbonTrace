@@ -256,8 +256,10 @@ def comparar(elegiveis: list[TotalUnidade]) -> Comparacao:
             unidade_nome=u.unidade_nome,
             emissao_kg_co2e=u.emissao_kg_co2e,
             desvio_percentual=_desvio(u.emissao_kg_co2e, centro),
-            alerta=abs(_desvio(u.emissao_kg_co2e, centro))
-            > LIMIAR_ALERTA_PERCENTUAL,
+            alerta=(
+                abs(u.emissao_kg_co2e - centro) * Decimal("100")
+                > centro * LIMIAR_ALERTA_PERCENTUAL
+            ),
         )
         for u in ordenadas
     )
